@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarkItDown GUI - Convertidor a Markdown</title>
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📝 MarkItDown GUI</h1>
+            <p class="subtitle">Convierte múltiples formatos a Markdown automáticamente</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Sección de carga de archivos -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h2>Arrastra archivos aquí o haz clic para seleccionar</h2>
+                    <p class="upload-hint">Puedes subir múltiples archivos de una sola vez</p>
+                    <input type="file" id="fileInput" multiple hidden>
+                </div>
+
+                <div class="formats-info">
+                    <h3>Formatos soportados:</h3>
+                    <div id="formatsList" class="formats-list">
+                        <div class="format-loading">Cargando formatos...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de archivos seleccionados -->
+            <section id="filesSection" class="files-section" style="display: none;">
+                <h2>Archivos seleccionados</h2>
+                <div id="filesList" class="files-list"></div>
+                <div class="actions">
+                    <button id="convertBtn" class="btn btn-primary">Convertir archivos</button>
+                    <button id="clearBtn" class="btn btn-secondary">Limpiar</button>
+                </div>
+            </section>
+
+            <!-- Sección de progreso -->
+            <section id="progressSection" class="progress-section" style="display: none;">
+                <h2>Procesando...</h2>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <p id="progressText" class="progress-text">0/0 archivos procesados</p>
+                </div>
+            </section>
+
+            <!-- Sección de resultados -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <h2>Resultados</h2>
+                
+                <div id="successInfo" class="info-box success" style="display: none;">
+                    <span id="successCount">0</span> archivo(s) convertido(s) exitosamente ✓
+                </div>
+
+                <div id="errorInfo" class="info-box error" style="display: none;">
+                    <span id="errorCount">0</span> error(es) durante la conversión ✗
+                </div>
+
+                <div id="resultsList" class="results-list"></div>
+
+                <div class="actions">
+                    <button id="newConversionBtn" class="btn btn-primary">Nueva conversión</button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Powered by <strong>MarkItDown</strong> | Conversión rápida y segura</p>
+        </footer>
+    </div>
+
+    <!-- Modal para mostrar/descargar contenido -->
+    <div id="contentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Contenido Markdown</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalPreview" class="modal-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                <button id="downloadBtn" class="btn btn-primary">Descargar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>
