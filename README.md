@@ -41,7 +41,7 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 ### 1. Clonar o descargar el proyecto
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/aruetre/markitdown_gui.git
 cd markitdown_gui
 ```
 
@@ -131,6 +131,53 @@ Convierte un único archivo
 - **Parámetro**: `file` (FormData con un archivo)
 - **Retorna**: Resultado con contenido Markdown
 
+### POST `/api/zip`
+Empaqueta varios .md generados por el cliente en un único `conversiones.zip`.
+- **Body** (JSON): `{ "files": [ { "filename": "...", "content": "..." } ] }`
+- **Retorna**: `application/zip` con `Content-Disposition: attachment; filename="conversiones.zip"`
+- Aplica las mismas mitigaciones que el resto: límite de archivos por lote, saneado de nombres (incluye strip de `/` y `\` para prevenir zip-slip), y dedup automático de nombres en colisión (`doc.md`, `doc (2).md`, …).
+
+## 🔄 Cómo procesa los archivos
+
+El servidor es **stateless**: no hay carpeta de uploads, ni de outputs, ni base de datos. Nada se persiste entre requests.
+
+### Ciclo de vida del archivo de entrada (PDF, DOCX, etc.)
+
+1. El cliente sube el archivo vía `multipart/form-data`.
+2. FastAPI lo expone como un `UploadFile` (un `SpooledTemporaryFile` en memoria/disco que limpia Starlette al cerrar la request).
+3. El backend lo vuelca a un `tempfile.NamedTemporaryFile(delete=False, suffix=<extensión original>)` — típicamente en `/tmp` (Linux/Mac) o `%TEMP%` (Windows).
+4. Preservar la extensión original es **load-bearing**: MarkItDown despacha el conversor por sufijo. Sin la extensión correcta, devolvería contenido vacío o erróneo.
+5. `MarkItDown.convert(tmp_path)` lee el temp file en memoria.
+6. Un `finally` ejecuta `os.unlink(tmp_path)`. Tras la respuesta no queda rastro del archivo en disco.
+
+### Ciclo de vida del Markdown de salida
+
+1. `result.text_content` se devuelve como **string dentro del JSON de respuesta** — nunca se escribe a disco en el servidor.
+2. El campo `markdown_filename` (`<nombre>.md`) es solo una sugerencia de nombre de descarga.
+3. El frontend construye un `data:text/markdown;...` URL y dispara la descarga en el navegador. El `.md` solo existe en el cliente, donde lo guarde el usuario. Si no se descarga, se pierde al cerrar la pestaña.
+
+### Manejo de errores por lote (`/api/convert`)
+
+Cada archivo se procesa en su propio `try/except`: un error en uno no aborta el resto. La respuesta siempre es `200 OK` con dos arrays:
+
+```json
+{
+  "results": [ ... archivos convertidos con éxito ... ],
+  "errors":  [ { "filename": "...", "error": "..." } ],
+  "total_files": N,
+  "successful": M,
+  "failed": N - M
+}
+```
+
+`/api/convert-single`, en cambio, levanta `HTTPException` (400 si la extensión no está soportada, 500 si la conversión falla).
+
+### Caveats
+
+- **Crash entre los pasos 3 y 6** (p. ej. `kill -9` o panic del proceso): el temp file queda huérfano en `/tmp`. Solo el `try/finally` cubre el caso normal, no la muerte abrupta.
+- **Tamaño**: no hay límite explícito de upload — un archivo grande se carga entero en memoria/disco. Considera añadir un límite a nivel de Uvicorn/proxy si lo expones públicamente.
+- **CORS**: `allow_origins=["*"]` está pensado para uso local. Restringir antes de cualquier despliegue.
+
 ## ⚙️ Configuración Avanzada
 
 ### Instalar dependencias opcionales específicas
@@ -148,13 +195,32 @@ uv pip install 'markitdown[all]'
 
 ## 🛡️ Consideraciones de Seguridad
 
-⚠️ **Importante**: MarkItDown realiza operaciones de I/O con los privilegios del proceso actual. 
+⚠️ **Importante**: MarkItDown realiza operaciones de I/O con los privilegios del proceso actual.
 En ambientes no confiables:
 
 - Valida y sanitiza las rutas de archivo
 - Limita los esquemas de URI permitidos
 - Restringe el acceso a recursos privados/locales
 - Usa la función de conversión más específica que necesites
+
+### Mitigaciones implementadas en esta app
+
+- **Límite de tamaño por archivo**: 50 MB. Por encima → `413 Request Entity Too Large`.
+- **Límite de archivos por lote**: 50 en `/api/convert`. Por encima → `400`.
+- **Saneamiento de nombres reflejados**: los caracteres de control ASCII se eliminan del `filename` antes de devolverlo en la respuesta y de usarlo como sugerencia de descarga.
+- **Escapado HTML en el frontend**: cualquier nombre de archivo o mensaje de error se escapa (`& < > " '`) antes de inyectarse en `innerHTML`. Defensa contra XSS reflejado por nombres maliciosos como `<img src=x onerror=...>.txt`.
+- **`enable_plugins=False`** en el constructor de `MarkItDown`: no se cargan plugins externos. Reduce superficie de RCE si el entorno se ve comprometido.
+- **`tempfile.NamedTemporaryFile`** con nombre aleatorio: el atacante no controla la ruta del archivo en disco. La extensión sí (load-bearing para el dispatcher de MarkItDown), pero está validada contra una whitelist.
+- **Borrado del temp file** en `finally`: nada se persiste tras la conversión.
+
+### Riesgos residuales conocidos
+
+- **Sin timeout en `md.convert()`**. Un PDF/Office malformado puede colgar el worker. Mitigación operacional: ejecutar tras un proxy con timeout (Nginx, Caddy) o un supervisor que reinicie workers colgados.
+- **XXE / SSRF en formatos XML-like** (`.xml`, `.html`, `.htm`, `.epub`). El comportamiento depende de la lib upstream. Si vas a procesar documentos no confiables, considera deshabilitar esas extensiones eliminándolas de `SUPPORTED_EXTENSIONS`.
+- **Zip slip / zip bomb en `.zip`**. Misma consideración que XML.
+- **Macros en Office docs**: MarkItDown extrae texto, no ejecuta macros, pero los parsers de Office son superficie de ataque histórica (CVEs). Mantén la dependencia actualizada.
+- **CORS abierto** (`allow_origins=["*"]`): solo apto para uso local. Restringir antes de cualquier despliegue público.
+- **Sin autenticación**: no la hay. Cualquiera con acceso al puerto puede convertir archivos. Pon delante un reverse-proxy con auth si lo expones.
 
 ## 🐛 Solución de Problemas
 
@@ -204,6 +270,12 @@ Las contribuciones son bienvenidas. Por favor:
 ## 📄 Licencia
 
 Este proyecto usa [MarkItDown](https://github.com/microsoft/markitdown) que está bajo licencia MIT.
+
+## 👤 Autor
+
+**Antonio Rueda** — [@aruetre](https://github.com/aruetre) · antonio.rueda@gmail.com
+
+Repositorio: <https://github.com/aruetre/markitdown_gui>
 
 ## 🙏 Créditos
 

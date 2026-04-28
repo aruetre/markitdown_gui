@@ -5,7 +5,7 @@ description = "GUI web para convertir múltiples formatos a Markdown usando Mark
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-    { name = "Your Name", email = "you@example.com" }
+    { name = "Antonio Rueda", email = "antonio.rueda@gmail.com" }
 ]
 dependencies = [
     "fastapi==0.109.0",

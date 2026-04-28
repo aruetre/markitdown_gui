@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkItDown GUI - Convertidor a Markdown</title>
+    <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="static/styles.css">
 </head>
 <body>
@@ -22,6 +26,18 @@
                     <p class="upload-hint">Puedes subir múltiples archivos de una sola vez</p>
                     <input type="file" id="fileInput" multiple hidden>
                 </div>
+
+                <aside class="admonition admonition-info">
+                    <div class="admonition-title">
+                        <span class="admonition-icon" aria-hidden="true">🔒</span>
+                        <span>Privacidad</span>
+                    </div>
+                    <p class="admonition-lede">Tus archivos se procesan de forma efímera y nunca quedan almacenados.</p>
+                    <ul class="admonition-list">
+                        <li><strong>Documento original:</strong> se escribe en un archivo temporal solo mientras dura la conversión y se elimina al terminar.</li>
+                        <li><strong>Resultado Markdown:</strong> no se guarda en el servidor; se devuelve directamente al navegador.</li>
+                    </ul>
+                </aside>
 
                 <div class="formats-info">
                     <h3>Formatos soportados:</h3>
@@ -49,6 +65,11 @@
                         <div id="progressFill" class="progress-fill"></div>
                     </div>
                     <p id="progressText" class="progress-text">0/0 archivos procesados</p>
+                    <p id="progressCurrent" class="progress-current"></p>
+                    <details class="progress-log-wrapper" open>
+                        <summary class="progress-log-summary">Detalle por archivo</summary>
+                        <div id="progressLog" class="progress-log"></div>
+                    </details>
                 </div>
             </section>
 
@@ -67,15 +88,23 @@
                 <div id="resultsList" class="results-list"></div>
 
                 <div class="actions">
-                    <button id="newConversionBtn" class="btn btn-primary">Nueva conversión</button>
+                    <button id="downloadAllBtn" class="btn btn-primary">Descargar todos como ZIP</button>
+                    <button id="newConversionBtn" class="btn btn-secondary">Nueva conversión</button>
                 </div>
             </section>
         </main>
 
         <footer class="footer">
             <p>Powered by <strong>MarkItDown</strong> | Conversión rápida y segura</p>
+            <p class="footer-author">
+                Por <a href="https://github.com/aruetre" target="_blank" rel="noopener noreferrer">Antonio Rueda</a>
+                · <a href="https://github.com/aruetre/markitdown_gui" target="_blank" rel="noopener noreferrer">Código en GitHub</a>
+            </p>
         </footer>
     </div>
+
+    <!-- Contenedor de notificaciones (toasts) -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <!-- Modal para mostrar/descargar contenido -->
     <div id="contentModal" class="modal" style="display: none;">

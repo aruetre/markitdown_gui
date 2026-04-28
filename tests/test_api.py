@@ -1,6 +1,9 @@
+import io
+import zipfile
+
 from fastapi.testclient import TestClient
 
-from backend.main import SUPPORTED_EXTENSIONS, app
+from backend.main import MAX_FILE_SIZE, MAX_FILES_PER_BATCH, SUPPORTED_EXTENSIONS, app
 
 client = TestClient(app)
 
@@ -70,3 +73,129 @@ def test_convert_multi_collects_errors_alongside_results():
 def test_convert_multi_requires_at_least_one_file():
     r = client.post("/api/convert", files=[])
     assert r.status_code == 422
+
+
+def test_convert_single_rejects_oversized_file():
+    payload = b"x" * (MAX_FILE_SIZE + 1)
+    r = client.post(
+        "/api/convert-single",
+        files={"file": ("big.txt", payload, "text/plain")},
+    )
+    assert r.status_code == 413
+    assert "too large" in r.json()["detail"].lower()
+
+
+def test_convert_multi_rejects_too_many_files():
+    files = [("files", (f"f{i}.txt", b"x", "text/plain")) for i in range(MAX_FILES_PER_BATCH + 1)]
+    r = client.post("/api/convert", files=files)
+    assert r.status_code == 400
+    assert "too many" in r.json()["detail"].lower()
+
+
+def test_convert_multi_oversized_file_lands_in_errors_not_results():
+    files = [
+        ("files", ("ok.txt", b"contenido", "text/plain")),
+        ("files", ("big.txt", b"x" * (MAX_FILE_SIZE + 1), "text/plain")),
+    ]
+    r = client.post("/api/convert", files=files)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["successful"] == 1
+    assert body["failed"] == 1
+    assert body["errors"][0]["filename"] == "big.txt"
+    assert "too large" in body["errors"][0]["error"].lower()
+
+
+def test_zip_packages_files_and_returns_application_zip():
+    r = client.post(
+        "/api/zip",
+        json={
+            "files": [
+                {"filename": "uno.md", "content": "# uno\n"},
+                {"filename": "dos.md", "content": "# dos\n"},
+            ]
+        },
+    )
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"
+    assert "conversiones.zip" in r.headers["content-disposition"]
+
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
+        names = sorted(zf.namelist())
+        assert names == ["dos.md", "uno.md"]
+        assert zf.read("uno.md").decode() == "# uno\n"
+
+
+def test_zip_dedupes_colliding_filenames():
+    r = client.post(
+        "/api/zip",
+        json={
+            "files": [
+                {"filename": "doc.md", "content": "primero"},
+                {"filename": "doc.md", "content": "segundo"},
+                {"filename": "doc.md", "content": "tercero"},
+            ]
+        },
+    )
+    assert r.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
+        names = sorted(zf.namelist())
+        assert names == ["doc (2).md", "doc (3).md", "doc.md"]
+
+
+def test_zip_strips_path_traversal_in_filename():
+    r = client.post(
+        "/api/zip",
+        json={
+            "files": [
+                {"filename": "../../etc/passwd.md", "content": "no escapes"},
+                {"filename": "..\\..\\windows\\system32\\evil.md", "content": "tampoco"},
+            ]
+        },
+    )
+    assert r.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
+        for name in zf.namelist():
+            assert not name.startswith("/")
+            assert not name.startswith("..")
+            assert "/" not in name
+            assert "\\" not in name
+
+
+def test_zip_appends_md_suffix_if_missing():
+    r = client.post(
+        "/api/zip",
+        json={"files": [{"filename": "sin_extension", "content": "x"}]},
+    )
+    assert r.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
+        assert zf.namelist() == ["sin_extension.md"]
+
+
+def test_zip_rejects_empty_payload():
+    r = client.post("/api/zip", json={"files": []})
+    assert r.status_code == 400
+
+
+def test_zip_rejects_too_many_files():
+    files = [{"filename": f"f{i}.md", "content": "x"} for i in range(MAX_FILES_PER_BATCH + 1)]
+    r = client.post("/api/zip", json={"files": files})
+    assert r.status_code == 400
+
+
+def test_filename_with_html_is_sanitized_in_response():
+    # El backend debe quitar caracteres de control; los caracteres < > " ' & se preservan
+    # como texto pero el frontend los escapa antes de inyectar en innerHTML.
+    payload_name = "evil\x00\n<img src=x>.txt"
+    r = client.post(
+        "/api/convert-single",
+        files={"file": (payload_name, b"hola", "text/plain")},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    # Los caracteres de control han sido eliminados
+    assert "\x00" not in body["original_filename"]
+    assert "\n" not in body["original_filename"]
+    assert "\x00" not in body["markdown_filename"]
+    # Los <, >, etc. siguen presentes (es responsabilidad del cliente escaparlos al renderizar)
+    assert "<img" in body["original_filename"]
