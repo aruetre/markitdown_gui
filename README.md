@@ -6,10 +6,10 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 
 - ✅ **Carga de múltiples archivos** - Arrastra y suelta o selecciona archivos
 - 🔍 **Detección automática de extensiones** - Identifica el formato automáticamente
-- 🚀 **Conversión individual** - Procesa cada archivo de forma separada
-- 📋 **Vista previa** - Visualiza el contenido Markdown en tiempo real
-- 💾 **Descarga individual** - Guarda cada archivo convertido por separado
-- 🎨 **Interfaz moderna** - Diseño responsivo y amigable
+- 🚀 **Conversión por lote** - Cada archivo se procesa de forma aislada; un fallo no aborta el resto
+- 📋 **Vista previa** - Visualiza el Markdown convertido antes de descargar
+- 💾 **Descarga individual o como ZIP** - Guarda cada `.md` por separado o todos en `conversiones.zip`
+- 🎨 **Interfaz moderna** - Diseño responsivo, sin build step ni framework de frontend
 
 ## 📦 Formatos Soportados
 
@@ -26,7 +26,7 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 - MP3, WAV, M4A (con transcripción opcional)
 
 ### Texto y Datos
-- CSV, JSON, XML
+- TXT, CSV, JSON, XML
 - HTML, EPUB
 - ZIP files
 - Markdown
@@ -95,16 +95,20 @@ La aplicación estará disponible en: **http://localhost:8000**
 ```
 markitdown_gui/
 ├── backend/
-│   └── main.py              # Servidor FastAPI
+│   └── main.py              # Servidor FastAPI (endpoints + saneo + ZIP)
 ├── frontend/
 │   ├── index.html           # Interfaz HTML
 │   └── static/
 │       ├── styles.css       # Estilos CSS
-│       └── script.js        # Lógica JavaScript
+│       ├── script.js        # Lógica JavaScript
+│       └── favicon.svg      # Favicon (servido también en /favicon.ico)
+├── tests/
+│   └── test_api.py          # Tests del API (pytest + httpx)
 ├── pyproject.toml           # Configuración de dependencias (uv)
+├── uv.lock                  # Lockfile reproducible (uv)
 ├── run.sh                   # Script para ejecutar (Linux/Mac)
 ├── run.ps1                  # Script para ejecutar (Windows)
-└── README.md               # Este archivo
+└── README.md                # Este archivo
 ```
 
 ## 🔌 API Endpoints
@@ -175,7 +179,7 @@ Cada archivo se procesa en su propio `try/except`: un error en uno no aborta el 
 ### Caveats
 
 - **Crash entre los pasos 3 y 6** (p. ej. `kill -9` o panic del proceso): el temp file queda huérfano en `/tmp`. Solo el `try/finally` cubre el caso normal, no la muerte abrupta.
-- **Tamaño**: no hay límite explícito de upload — un archivo grande se carga entero en memoria/disco. Considera añadir un límite a nivel de Uvicorn/proxy si lo expones públicamente.
+- **Memoria**: el límite de 50 MB por archivo y 50 archivos por lote (ver siguiente sección) se aplica en el handler tras leer el body. El archivo se carga entero en memoria/disco antes de validarse — un proxy delante (Nginx, Caddy) sigue siendo recomendable para cortar el upload antes de llegar al worker.
 - **CORS**: `allow_origins=["*"]` está pensado para uso local. Restringir antes de cualquier despliegue.
 
 ## ⚙️ Configuración Avanzada
