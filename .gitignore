@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Claude Code (configuración local del agente, no parte del proyecto)
+.claude/
+CLAUDE.md
