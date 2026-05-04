@@ -8,7 +8,6 @@ from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
 from markitdown import MarkItDown
@@ -20,15 +19,6 @@ MAX_FILENAME_LEN = 255
 
 # Crear aplicación FastAPI
 app = FastAPI(title="MarkItDown GUI")
-
-# Configurar CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
