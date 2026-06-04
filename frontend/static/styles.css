@@ -752,6 +752,78 @@ a:hover {
     height: 1.05em;
 }
 
+/* Bloque de anonimización en la sección de archivos */
+.anonymize-box {
+    margin-top: var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-2);
+}
+
+.anonymize-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+    color: var(--color-fg);
+    cursor: pointer;
+}
+
+.anonymize-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.anonymize-options {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.anonymize-hint {
+    font-size: 0.85rem;
+    color: var(--color-fg-subtle);
+    margin-bottom: var(--space-2);
+}
+
+.anonymize-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+}
+
+.anonymize-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--color-fg-muted);
+    cursor: pointer;
+}
+
+.anonymize-type input {
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+/* Etiqueta de resultado anonimizado */
+.anon-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: var(--space-2);
+    padding: 1px var(--space-2);
+    border-radius: var(--radius-pill);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+    vertical-align: middle;
+}
+
 .result-actions {
     display: flex;
     gap: var(--space-2);
@@ -817,6 +889,7 @@ a:hover {
     gap: var(--space-3);
     justify-content: center;
     flex-wrap: wrap;
+    margin-top: var(--space-5);
 }
 
 .btn {

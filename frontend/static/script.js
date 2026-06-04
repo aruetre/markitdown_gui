@@ -124,8 +124,46 @@ const errorCount = document.getElementById('errorCount');
 // Inicializar
 document.addEventListener('DOMContentLoaded', async () => {
     await loadSupportedFormats();
+    await loadAnonymizerOptions();
     setupEventListeners();
 });
+
+// Cargar tipos de datos anonimizables y montar las casillas (todas marcadas)
+async function loadAnonymizerOptions() {
+    const check = document.getElementById('anonymizeCheck');
+    const optionsBox = document.getElementById('anonymizeOptions');
+    const typesBox = document.getElementById('anonymizeTypes');
+
+    check.addEventListener('change', () => {
+        optionsBox.style.display = check.checked ? 'block' : 'none';
+    });
+
+    try {
+        const response = await fetch('/api/anonymizer-options');
+        const data = await response.json();
+        typesBox.innerHTML = (data.options || [])
+            .map(opt => `
+                <label class="anonymize-type">
+                    <input type="checkbox" value="${escapeHtml(opt.key)}" ${opt.default ? 'checked' : ''}>
+                    <span>${escapeHtml(opt.label)}</span>
+                </label>
+            `)
+            .join('');
+    } catch (error) {
+        console.error('Error loading anonymizer options:', error);
+        typesBox.innerHTML = '<div class="format-loading">Error al cargar opciones</div>';
+    }
+}
+
+// Lee el estado de anonimización: { anonymize, entities }
+function getAnonymizeSelection() {
+    const check = document.getElementById('anonymizeCheck');
+    if (!check || !check.checked) return { anonymize: false, entities: [] };
+    const entities = Array.from(
+        document.querySelectorAll('#anonymizeTypes input[type="checkbox"]:checked')
+    ).map(el => el.value);
+    return { anonymize: entities.length > 0, entities };
+}
 
 // Cargar formatos soportados
 async function loadSupportedFormats() {
@@ -274,6 +312,7 @@ async function convertFiles() {
     const total = selectedFiles.length;
     const results = [];
     const errors = [];
+    const anon = getAnonymizeSelection();
 
     progressFill.style.width = '0%';
     progressText.textContent = `0/${total} archivos procesados`;
@@ -287,6 +326,10 @@ async function convertFiles() {
 
         const formData = new FormData();
         formData.append('file', file);
+        if (anon.anonymize) {
+            formData.append('anonymize', 'true');
+            formData.append('anonymize_entities', anon.entities.join(','));
+        }
 
         const start = performance.now();
         try {
@@ -430,13 +473,14 @@ function displayResults(data) {
 
             const elapsed = result.elapsed_ms != null ? ` • ${formatElapsed(result.elapsed_ms)}` : '';
             const sourceIcon = getFileIcon(result.extension || extOf(result.original_filename));
+            const anonTag = result.anonymized ? ' <span class="anon-tag">🕵️ Anonimizado</span>' : '';
             return `
                 <div class="result-item">
                     <div class="result-header">
                         <div class="result-info">
                             <div class="result-status">✓</div>
                             <div class="result-details">
-                                <div class="result-filename">${escapeHtml(result.markdown_filename)}</div>
+                                <div class="result-filename">${escapeHtml(result.markdown_filename)}${anonTag}</div>
                                 <div class="result-format">De: ${sourceIcon} ${escapeHtml(result.original_filename)} (${escapeHtml(result.format)})${elapsed}</div>
                                 ${renderTokenBadges(result.markdown_content)}
                             </div>

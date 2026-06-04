@@ -10,6 +10,7 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 - 📋 **Vista previa** - Visualiza el Markdown convertido antes de descargar
 - 💾 **Descarga individual o como ZIP** - Guarda cada `.md` por separado o todos en `conversiones.zip`
 - 🔢 **Estimación de tokens** - Calcula (heurística, en el navegador) cuántos tokens ocuparía cada documento en ChatGPT, Claude, Gemini/NotebookLM y Kimi, con indicador de si cabe en su ventana de contexto
+- 🕵️ **Anonimización de datos sensibles** - Opción para quitar PII (DNI/NIE, emails, nombres, teléfonos, IBAN, tarjetas, direcciones, IPs) del Markdown resultante mediante [Microsoft Presidio](https://github.com/microsoft/presidio)
 - 🎨 **Interfaz moderna** - Diseño responsivo, sin build step ni framework de frontend
 
 ## 📦 Formatos Soportados
@@ -96,15 +97,17 @@ La aplicación estará disponible en: **http://localhost:8000**
 ```
 markitdown_gui/
 ├── backend/
-│   └── main.py              # Servidor FastAPI (endpoints + saneo + ZIP)
+│   ├── main.py              # Servidor FastAPI (endpoints + saneo + ZIP)
+│   └── anonymizer.py        # Anonimización de PII con Presidio (perezoso)
 ├── frontend/
 │   ├── index.html           # Interfaz HTML
 │   └── static/
 │       ├── styles.css       # Estilos CSS
-│       ├── script.js        # Lógica JavaScript
+│       ├── script.js        # Lógica JavaScript (conversión, tokens, anonimización)
 │       └── favicon.svg      # Favicon (servido también en /favicon.ico)
 ├── tests/
-│   └── test_api.py          # Tests del API (pytest + httpx)
+│   ├── test_api.py          # Tests del API (pytest + httpx)
+│   └── test_anonymizer.py   # Tests de anonimización (DNI/NIE, email, endpoints)
 ├── pyproject.toml           # Configuración de dependencias (uv)
 ├── uv.lock                  # Lockfile reproducible (uv)
 ├── run.sh                   # Script para ejecutar (Linux/Mac)
@@ -126,15 +129,23 @@ Retorna lista de formatos soportados
 }
 ```
 
+### GET `/api/anonymizer-options`
+Retorna los tipos de datos sensibles que se pueden anonimizar
+```json
+{ "options": [ { "key": "dni_nie", "label": "DNI / NIE" }, { "key": "email", "label": "Email" }, ... ] }
+```
+
 ### POST `/api/convert`
 Convierte múltiples archivos
 - **Parámetro**: `files` (FormData con múltiples archivos)
-- **Retorna**: Array de resultados con contenido Markdown
+- **Opcional**: `anonymize` (`true`/`false`) y `anonymize_entities` (claves separadas por coma, p. ej. `email,dni_nie,person`)
+- **Retorna**: Array de resultados con contenido Markdown (cada resultado incluye `anonymized: bool`)
 
 ### POST `/api/convert-single`
 Convierte un único archivo
 - **Parámetro**: `file` (FormData con un archivo)
-- **Retorna**: Resultado con contenido Markdown
+- **Opcional**: `anonymize` y `anonymize_entities` (igual que en `/api/convert`)
+- **Retorna**: Resultado con contenido Markdown. Si se pidió anonimizar y el motor no está disponible → `503`.
 
 ### POST `/api/zip`
 Empaqueta varios .md generados por el cliente en un único `conversiones.zip`.

@@ -14,7 +14,7 @@
     <div class="container">
         <header class="header">
             <h1>📝 MarkItDown GUI</h1>
-            <p class="subtitle">Convierte múltiples formatos a Markdown automáticamente</p>
+            <p class="subtitle">Convierte tus documentos a Markdown y, opcionalmente, anonimiza datos sensibles (DNI, nombres, emails…)</p>
         </header>
 
         <main class="main-content">
@@ -51,6 +51,18 @@
             <section id="filesSection" class="files-section" style="display: none;">
                 <h2>Archivos seleccionados</h2>
                 <div id="filesList" class="files-list"></div>
+
+                <div class="anonymize-box">
+                    <label class="anonymize-toggle">
+                        <input type="checkbox" id="anonymizeCheck">
+                        <span>🕵️ Anonimizar datos sensibles</span>
+                    </label>
+                    <div id="anonymizeOptions" class="anonymize-options" style="display: none;">
+                        <p class="anonymize-hint">Selecciona qué quitar del Markdown resultante:</p>
+                        <div id="anonymizeTypes" class="anonymize-types"></div>
+                    </div>
+                </div>
+
                 <div class="actions">
                     <button id="convertBtn" class="btn btn-primary">Convertir archivos</button>
                     <button id="clearBtn" class="btn btn-secondary">Limpiar</button>

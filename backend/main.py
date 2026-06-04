@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 from typing import List
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form
 from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -53,6 +53,20 @@ def _check_request_size(request: Request) -> None:
         return
     if size > MAX_FILE_SIZE * MAX_FILES_PER_BATCH:
         raise HTTPException(status_code=413, detail="Request body too large")
+
+
+def _parse_entities(raw: str) -> list[str]:
+    """Convierte 'email,person, dni_nie' en ['email', 'person', 'dni_nie']."""
+    return [part.strip() for part in (raw or "").split(",") if part.strip()]
+
+
+def _apply_anonymization(text: str, anonymize: bool, entities: list[str]) -> str:
+    """Aplica anonimización si se pidió. Import perezoso de Presidio."""
+    if not anonymize or not entities:
+        return text
+    from backend.anonymizer import anonymize_text
+
+    return anonymize_text(text, entities)
 
 
 # Extensiones soportadas
@@ -109,14 +123,29 @@ async def get_supported_formats():
     )
 
 
+@app.get("/api/anonymizer-options")
+async def get_anonymizer_options():
+    """Tipos de datos sensibles que se pueden anonimizar (para el frontend)."""
+    from backend.anonymizer import available_options
+
+    return JSONResponse({"options": available_options()})
+
+
 @app.post("/api/convert")
-async def convert_files(request: Request, files: List[UploadFile] = File(...)):
+async def convert_files(
+    request: Request,
+    files: List[UploadFile] = File(...),
+    anonymize: bool = Form(False),
+    anonymize_entities: str = Form(""),
+):
     """
     Convertir múltiples archivos a Markdown.
     Detecta automáticamente la extensión y convierte individualmente.
     """
     if not files:
         raise HTTPException(status_code=400, detail="No files provided")
+
+    entities = _parse_entities(anonymize_entities)
 
     if len(files) > MAX_FILES_PER_BATCH:
         raise HTTPException(
@@ -160,14 +189,16 @@ async def convert_files(request: Request, files: List[UploadFile] = File(...)):
             try:
                 result = md.convert(tmp_path)
                 filename_without_ext = _safe_filename(Path(file.filename or "").stem)
+                text_content = _apply_anonymization(result.text_content, anonymize, entities)
 
                 results.append(
                     {
                         "original_filename": safe_name,
                         "format": SUPPORTED_EXTENSIONS.get(file_extension, "Unknown"),
                         "extension": file_extension,
-                        "markdown_content": result.text_content,
+                        "markdown_content": text_content,
                         "markdown_filename": f"{filename_without_ext}.md",
+                        "anonymized": bool(anonymize and entities),
                         "status": "success",
                     }
                 )
@@ -192,9 +223,15 @@ async def convert_files(request: Request, files: List[UploadFile] = File(...)):
 
 
 @app.post("/api/convert-single")
-async def convert_single_file(request: Request, file: UploadFile = File(...)):
+async def convert_single_file(
+    request: Request,
+    file: UploadFile = File(...),
+    anonymize: bool = Form(False),
+    anonymize_entities: str = Form(""),
+):
     """Convertir un único archivo a Markdown"""
     _check_request_size(request)
+    entities = _parse_entities(anonymize_entities)
 
     try:
         file_extension = Path(file.filename or "").suffix.lower()
@@ -219,14 +256,22 @@ async def convert_single_file(request: Request, file: UploadFile = File(...)):
         try:
             result = md.convert(tmp_path)
             filename_without_ext = _safe_filename(Path(file.filename or "").stem)
+            try:
+                text_content = _apply_anonymization(result.text_content, anonymize, entities)
+            except (ImportError, OSError) as e:
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Anonimización no disponible: {e}",
+                )
 
             return JSONResponse(
                 {
                     "original_filename": _safe_filename(file.filename),
                     "format": SUPPORTED_EXTENSIONS.get(file_extension, "Unknown"),
                     "extension": file_extension,
-                    "markdown_content": result.text_content,
+                    "markdown_content": text_content,
                     "markdown_filename": f"{filename_without_ext}.md",
+                    "anonymized": bool(anonymize and entities),
                     "status": "success",
                 }
             )
