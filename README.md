@@ -9,6 +9,7 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 - 🚀 **Conversión por lote** - Cada archivo se procesa de forma aislada; un fallo no aborta el resto
 - 📋 **Vista previa** - Visualiza el Markdown convertido antes de descargar
 - 💾 **Descarga individual o como ZIP** - Guarda cada `.md` por separado o todos en `conversiones.zip`
+- 🔢 **Estimación de tokens** - Calcula (heurística, en el navegador) cuántos tokens ocuparía cada documento en ChatGPT, Claude, Gemini/NotebookLM y Kimi, con indicador de si cabe en su ventana de contexto
 - 🎨 **Interfaz moderna** - Diseño responsivo, sin build step ni framework de frontend
 
 ## 📦 Formatos Soportados
