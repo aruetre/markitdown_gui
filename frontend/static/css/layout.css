@@ -2,10 +2,12 @@
 .container {
     max-width: 960px;
     margin: 0 auto;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -14,8 +16,8 @@
 .header {
     padding: var(--space-10) var(--space-8) var(--space-8);
     text-align: center;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-surface);
+    border-bottom: 1px solid var(--glass-border);
+    background: transparent;
 }
 
 .header h1 {
@@ -42,8 +44,8 @@
     padding: var(--space-5) var(--space-8);
     text-align: center;
     color: var(--color-fg-subtle);
-    border-top: 1px solid var(--color-border);
-    background: var(--color-surface-2);
+    border-top: 1px solid var(--glass-border);
+    background: var(--glass-bg-soft);
     font-size: 0.875rem;
 }
 

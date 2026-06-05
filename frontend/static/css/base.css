@@ -24,6 +24,20 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Atmósfera del fondo: manchas de color difuminadas tras el contenido.
+   Da profundidad para que las superficies de cristal tengan algo que refractar. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(42% 48% at 14% 12%, var(--blob-1), transparent 70%),
+        radial-gradient(46% 52% at 86% 18%, var(--blob-2), transparent 70%),
+        radial-gradient(52% 50% at 50% 104%, var(--blob-3), transparent 72%);
+}
+
 h1, h2, h3 {
     font-weight: 700;
     letter-spacing: -0.015em;

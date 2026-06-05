@@ -12,10 +12,12 @@
     padding: var(--space-12) var(--space-6);
     text-align: center;
     cursor: pointer;
-    background: var(--color-surface);
+    background: var(--glass-bg-soft);
+    box-shadow: var(--glass-highlight);
     transition:
         border-color var(--duration-base) var(--ease-out),
         background-color var(--duration-base) var(--ease-out),
+        box-shadow var(--duration-base) var(--ease-out),
         transform var(--duration-base) var(--ease-out);
 }
 
