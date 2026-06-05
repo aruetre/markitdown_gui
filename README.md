@@ -4,14 +4,15 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 
 ## 🎯 Características
 
-- ✅ **Carga de múltiples archivos** - Arrastra y suelta o selecciona archivos
+- ✅ **Carga de múltiples archivos** - Arrastra y suelta o selecciona; un botón **«Añadir más archivos»** permite ir acumulando documentos a la lista (deduplica por nombre+tamaño)
 - 🔍 **Detección automática de extensiones** - Identifica el formato automáticamente
 - 🚀 **Conversión por lote** - Cada archivo se procesa de forma aislada; un fallo no aborta el resto
-- 📋 **Vista previa** - Visualiza el Markdown convertido antes de descargar
+- 🖼️ **OCR de imágenes** - Extrae el texto de imágenes (PNG, JPG, GIF, BMP, WebP) con [Tesseract](https://github.com/tesseract-ocr/tesseract) en local, sin servicios externos
+- 📋 **Vista previa** - Visualiza el Markdown convertido antes de descargar (modal `<dialog>` nativo)
 - 💾 **Descarga individual o como ZIP** - Guarda cada `.md` por separado o todos en `conversiones.zip`
 - 🔢 **Estimación de tokens** - Calcula (heurística, en el navegador) cuántos tokens ocuparía cada documento en ChatGPT, Claude, Gemini/NotebookLM y Kimi, con indicador de si cabe en su ventana de contexto
-- 🕵️ **Anonimización de datos sensibles** - Opción para quitar PII (DNI/NIE, emails, nombres, teléfonos, IBAN, tarjetas, direcciones, IPs) del Markdown resultante mediante [Microsoft Presidio](https://github.com/microsoft/presidio)
-- 🎨 **Interfaz moderna** - Diseño responsivo, sin build step ni framework de frontend
+- 🕵️ **Anonimización de datos sensibles** - Opción para quitar PII (DNI/NIE, emails, nombres, teléfonos, IBAN, tarjetas, direcciones, IPs) del Markdown resultante mediante [Microsoft Presidio](https://github.com/microsoft/presidio). Se aplica también sobre el texto extraído por OCR
+- 🎨 **Interfaz moderna** - Diseño responsivo y accesible (contraste WCAG AA), sin build step ni framework: JavaScript en módulos ES nativos y CSS en parciales con `@layer`
 
 ## 📦 Formatos Soportados
 
@@ -22,10 +23,10 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 - Excel (.xlsx, .xls)
 
 ### Imágenes
-- JPEG, PNG, GIF, WebP, BMP (con OCR opcional)
+- JPEG, PNG, GIF, WebP, BMP — el texto se extrae por **OCR con Tesseract** (requiere el binario `tesseract` y los paquetes de idioma; ver Requisitos)
 
 ### Audio
-- MP3, WAV, M4A (con transcripción opcional)
+- MP3, WAV, M4A — transcripción mediante MarkItDown; mp3/m4a necesitan **ffmpeg** instalado
 
 ### Texto y Datos
 - TXT, CSV, JSON, XML
@@ -35,28 +36,47 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 
 ## 🚀 Requisitos Previos
 
-- Python 3.10 o superior
-- `uv` (gestor de paquetes) - [Instalar uv](https://docs.astral.sh/uv/getting-started/installation/)
+- **Python 3.10 o superior**
+- **`uv`** (gestor de paquetes) - [Instalar uv](https://docs.astral.sh/uv/getting-started/installation/)
+- **Dependencias del sistema** (binarios, no paquetes de Python):
+  - **Tesseract OCR** + paquetes de idioma (`spa`, `eng`) — necesario para extraer texto de imágenes.
+  - **ffmpeg** — necesario para transcribir audio comprimido (mp3/m4a).
+
+  > Los scripts de instalación de abajo instalan todo esto por ti. Si el binario falta, la conversión de imágenes responde `503` («OCR no disponible») en vez de fallar de forma opaca; el resto de formatos funciona igual.
 
 ## 📥 Instalación
 
-### 1. Clonar o descargar el proyecto
+### 1. Clonar el proyecto
 
 ```bash
 git clone https://github.com/aruetre/markitdown_gui.git
 cd markitdown_gui
 ```
 
-### 2. Instalar dependencias con `uv`
+### 2a. Instalación automática desde cero (recomendado)
+
+Instala dependencias del sistema (Tesseract + idiomas, ffmpeg), `uv` si falta, y todas las dependencias de Python:
 
 ```bash
-# Instalar dependencias principales
-uv sync
+# Fedora
+./install-fedora.sh
 
-# O si prefieres instalar en un entorno específico
-uv venv
-source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+# Ubuntu / Debian
+./install-ubuntu.sh
+```
+
+### 2b. Instalación manual
+
+```bash
+# Dependencias del sistema — Fedora
+sudo dnf install tesseract tesseract-langpack-spa tesseract-langpack-eng ffmpeg-free
+# Dependencias del sistema — Ubuntu/Debian
+sudo apt-get install tesseract-ocr tesseract-ocr-spa tesseract-ocr-eng ffmpeg
+
+# Dependencias de Python (incluye el modelo de spaCy es_core_news_lg, ~570 MB)
 uv sync
+# (con extras de desarrollo: pytest, black, ruff)
+uv sync --all-extras
 ```
 
 ## 🎮 Uso
@@ -97,17 +117,37 @@ La aplicación estará disponible en: **http://localhost:8000**
 ```
 markitdown_gui/
 ├── backend/
-│   ├── main.py              # Servidor FastAPI (endpoints + saneo + ZIP)
-│   └── anonymizer.py        # Anonimización de PII con Presidio (perezoso)
+│   ├── main.py              # Servidor FastAPI (endpoints + saneo + ZIP + no-cache)
+│   ├── anonymizer.py        # Anonimización de PII con Presidio (perezoso)
+│   └── ocr.py               # OCR de imágenes con Tesseract (perezoso)
 ├── frontend/
-│   ├── index.html           # Interfaz HTML
+│   ├── index.html           # Interfaz HTML (carga módulos ESM; modal <dialog>)
 │   └── static/
-│       ├── styles.css       # Estilos CSS
-│       ├── script.js        # Lógica JavaScript (conversión, tokens, anonimización)
-│       └── favicon.svg      # Favicon (servido también en /favicon.ico)
+│       ├── styles.css       # Índice CSS: declara @layer e importa los parciales
+│       ├── script.js        # Punto de entrada JS: import './js/main.js'
+│       ├── favicon.svg      # Favicon (servido también en /favicon.ico)
+│       ├── js/              # Módulos ES nativos
+│       │   ├── main.js       #   bootstrap: carga inicial + cableado de eventos
+│       │   ├── state.js      #   estado compartido (objeto único)
+│       │   ├── api.js        #   llamadas fetch a /api/*
+│       │   ├── utils.js      #   helpers puros (escape, formato, iconos)
+│       │   ├── tokens.js     #   estimación de tokens (badges + tabla)
+│       │   ├── anonymize.js  #   casillas y selección de anonimización
+│       │   ├── files.js      #   selección/drag-drop, lista, añadir más
+│       │   ├── conversion.js #   bucle de conversión + log de progreso
+│       │   ├── results.js    #   resultados, modal <dialog>, descargas
+│       │   └── toast.js      #   notificaciones
+│       └── css/             # Parciales CSS por capa/componente
+│           ├── theme.css     #   variables :root + dark mode (contraste WCAG AA)
+│           ├── base.css, layout.css, utilities.css
+│           └── components/   #   upload, files, anonymize, progress, results,
+│                             #   tokens, modal, toast, buttons, admonition, formats
 ├── tests/
 │   ├── test_api.py          # Tests del API (pytest + httpx)
-│   └── test_anonymizer.py   # Tests de anonimización (DNI/NIE, email, endpoints)
+│   ├── test_anonymizer.py   # Tests de anonimización (DNI/NIE, email, endpoints)
+│   └── test_ocr.py          # Tests de OCR (enrutado, 503, errores en lote, OCR real)
+├── install-fedora.sh        # Instalación desde cero en Fedora
+├── install-ubuntu.sh        # Instalación desde cero en Ubuntu/Debian
 ├── pyproject.toml           # Configuración de dependencias (uv)
 ├── uv.lock                  # Lockfile reproducible (uv)
 ├── run.sh                   # Script para ejecutar (Linux/Mac)
@@ -139,13 +179,13 @@ Retorna los tipos de datos sensibles que se pueden anonimizar
 Convierte múltiples archivos
 - **Parámetro**: `files` (FormData con múltiples archivos)
 - **Opcional**: `anonymize` (`true`/`false`) y `anonymize_entities` (claves separadas por coma, p. ej. `email,dni_nie,person`)
-- **Retorna**: Array de resultados con contenido Markdown (cada resultado incluye `anonymized: bool`)
+- **Retorna**: Array de resultados con contenido Markdown (cada resultado incluye `anonymized: bool`). Las imágenes se procesan por OCR; si el motor OCR no está disponible para un archivo, ese archivo aparece en `errors` sin abortar el resto.
 
 ### POST `/api/convert-single`
 Convierte un único archivo
 - **Parámetro**: `file` (FormData con un archivo)
 - **Opcional**: `anonymize` y `anonymize_entities` (igual que en `/api/convert`)
-- **Retorna**: Resultado con contenido Markdown. Si se pidió anonimizar y el motor no está disponible → `503`.
+- **Retorna**: Resultado con contenido Markdown. Devuelve `503` si se pidió procesar una imagen y el motor OCR (Tesseract) no está disponible, o si se pidió anonimizar y el motor de anonimización no lo está.
 
 ### POST `/api/zip`
 Empaqueta varios .md generados por el cliente en un único `conversiones.zip`.
@@ -186,13 +226,14 @@ Cada archivo se procesa en su propio `try/except`: un error en uno no aborta el 
 }
 ```
 
-`/api/convert-single`, en cambio, levanta `HTTPException` (400 si la extensión no está soportada, 500 si la conversión falla).
+`/api/convert-single`, en cambio, levanta `HTTPException` (400 si la extensión no está soportada, 413 si excede el tamaño, 503 si el motor de OCR o de anonimización no está disponible, 500 si la conversión falla).
 
 ### Caveats
 
 - **Crash entre los pasos 3 y 6** (p. ej. `kill -9` o panic del proceso): el temp file queda huérfano en `/tmp`. Solo el `try/finally` cubre el caso normal, no la muerte abrupta.
 - **Memoria**: el límite de 50 MB por archivo y 50 archivos por lote (ver siguiente sección) se aplica en el handler tras leer el body. El archivo se carga entero en memoria/disco antes de validarse — un proxy delante (Nginx, Caddy) sigue siendo recomendable para cortar el upload antes de llegar al worker.
-- **CORS**: `allow_origins=["*"]` está pensado para uso local. Restringir antes de cualquier despliegue.
+- **CORS**: no hay middleware de CORS. El frontend lo sirve la propia app en `/` y llama a `/api/*` en el mismo origen, así que no hace falta. Si algún día mueves el frontend a otro origen, añade `CORSMiddleware` con orígenes explícitos (nunca `allow_origins=["*"]`).
+- **Caché del navegador**: la app envía `Cache-Control: no-cache` en todas las respuestas, de modo que el navegador revalida (ETag) y carga el frontend nuevo en cuanto cambia, sin necesidad de `Ctrl+Shift+R`.
 
 ## ⚙️ Configuración Avanzada
 
@@ -235,7 +276,6 @@ En ambientes no confiables:
 - **XXE / SSRF en formatos XML-like** (`.xml`, `.html`, `.htm`, `.epub`). El comportamiento depende de la lib upstream. Si vas a procesar documentos no confiables, considera deshabilitar esas extensiones eliminándolas de `SUPPORTED_EXTENSIONS`.
 - **Zip slip / zip bomb en `.zip`**. Misma consideración que XML.
 - **Macros en Office docs**: MarkItDown extrae texto, no ejecuta macros, pero los parsers de Office son superficie de ataque histórica (CVEs). Mantén la dependencia actualizada.
-- **CORS abierto** (`allow_origins=["*"]`): solo apto para uso local. Restringir antes de cualquier despliegue público.
 - **Sin autenticación**: no la hay. Cualquiera con acceso al puerto puede convertir archivos. Pon delante un reverse-proxy con auth si lo expones.
 
 ## 🐛 Solución de Problemas
