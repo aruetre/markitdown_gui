@@ -66,6 +66,9 @@ async function convertFiles() {
             formData.append('anonymize_entities', anon.entities.join(','));
         }
 
+        const compact = document.getElementById('compactCheck')?.checked;
+        formData.append('compact', compact ? 'true' : 'false');
+
         const start = performance.now();
         try {
             const outcome = await convertSingle(formData);
