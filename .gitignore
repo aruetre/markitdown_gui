@@ -224,3 +224,6 @@ CLAUDE.md
 # Documentos de prueba privados (PII real) y residuos de WSL
 docs/*.pdf
 *:Zone.Identifier
+
+# Brainstorm visual companion
+.superpowers/
