@@ -32,7 +32,7 @@
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: var(--glass-highlight);
+    box-shadow: var(--shadow-sm), var(--glass-highlight);
     transition:
         border-color var(--duration-fast) var(--ease-out),
         transform var(--duration-fast) var(--ease-out),

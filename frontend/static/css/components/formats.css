@@ -4,7 +4,7 @@
     background: var(--glass-bg-soft);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
-    box-shadow: var(--glass-highlight);
+    box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
 
 .formats-info h3 {

@@ -5,7 +5,7 @@
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     background: var(--glass-bg-soft);
-    box-shadow: var(--glass-highlight);
+    box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
 
 .anonymize-toggle {
