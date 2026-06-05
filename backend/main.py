@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 import uvicorn
 from markitdown import MarkItDown
 
-from backend import ocr
+from backend import compactor, ocr
 
 # Límites para mitigar DoS por documentos grandes o lotes masivos
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB por archivo
@@ -85,6 +85,13 @@ def _apply_anonymization(text: str, anonymize: bool, entities: list[str]) -> str
     from backend.anonymizer import anonymize_text
 
     return anonymize_text(text, entities)
+
+
+def _compact(text: str, enabled: bool) -> str:
+    """Compacta el Markdown si se pidió (limpieza sin pérdida)."""
+    if not enabled:
+        return text
+    return compactor.compact_markdown(text)
 
 
 def _extract_markdown(tmp_path: str, file_extension: str) -> str:
@@ -167,6 +174,7 @@ async def convert_files(
     files: List[UploadFile] = File(...),
     anonymize: bool = Form(False),
     anonymize_entities: str = Form(""),
+    compact: bool = Form(True),
 ):
     """
     Convertir múltiples archivos a Markdown.
@@ -220,6 +228,8 @@ async def convert_files(
                 raw_text = _extract_markdown(tmp_path, file_extension)
                 filename_without_ext = _safe_filename(Path(file.filename or "").stem)
                 text_content = _apply_anonymization(raw_text, anonymize, entities)
+                original_chars = len(text_content)
+                text_content = _compact(text_content, compact)
 
                 results.append(
                     {
@@ -229,6 +239,7 @@ async def convert_files(
                         "markdown_content": text_content,
                         "markdown_filename": f"{filename_without_ext}.md",
                         "anonymized": bool(anonymize and entities),
+                        "original_chars": original_chars,
                         "status": "success",
                     }
                 )
@@ -258,6 +269,7 @@ async def convert_single_file(
     file: UploadFile = File(...),
     anonymize: bool = Form(False),
     anonymize_entities: str = Form(""),
+    compact: bool = Form(True),
 ):
     """Convertir un único archivo a Markdown"""
     _check_request_size(request)
@@ -300,6 +312,9 @@ async def convert_single_file(
                     detail=f"Anonimización no disponible: {e}",
                 )
 
+            original_chars = len(text_content)
+            text_content = _compact(text_content, compact)
+
             return JSONResponse(
                 {
                     "original_filename": _safe_filename(file.filename),
@@ -308,6 +323,7 @@ async def convert_single_file(
                     "markdown_content": text_content,
                     "markdown_filename": f"{filename_without_ext}.md",
                     "anonymized": bool(anonymize and entities),
+                    "original_chars": original_chars,
                     "status": "success",
                 }
             )
