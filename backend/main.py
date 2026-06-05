@@ -12,6 +12,8 @@ from pydantic import BaseModel, Field
 import uvicorn
 from markitdown import MarkItDown
 
+from backend import ocr
+
 # Límites para mitigar DoS por documentos grandes o lotes masivos
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB por archivo
 MAX_FILES_PER_BATCH = 50
@@ -67,6 +69,18 @@ def _apply_anonymization(text: str, anonymize: bool, entities: list[str]) -> str
     from backend.anonymizer import anonymize_text
 
     return anonymize_text(text, entities)
+
+
+def _extract_markdown(tmp_path: str, file_extension: str) -> str:
+    """Extrae el contenido del documento como texto.
+
+    Las imágenes pasan por OCR (Tesseract), ya que markitdown no reconoce el texto
+    de una imagen y devolvería contenido vacío. El resto de formatos los maneja
+    markitdown. Puede lanzar ImportError/OSError si el motor OCR no está disponible.
+    """
+    if ocr.is_image(file_extension):
+        return ocr.ocr_image(tmp_path)
+    return md.convert(tmp_path).text_content
 
 
 # Extensiones soportadas
@@ -187,9 +201,9 @@ async def convert_files(
                 tmp_path = tmp_file.name
 
             try:
-                result = md.convert(tmp_path)
+                raw_text = _extract_markdown(tmp_path, file_extension)
                 filename_without_ext = _safe_filename(Path(file.filename or "").stem)
-                text_content = _apply_anonymization(result.text_content, anonymize, entities)
+                text_content = _apply_anonymization(raw_text, anonymize, entities)
 
                 results.append(
                     {
@@ -254,10 +268,16 @@ async def convert_single_file(
             tmp_path = tmp_file.name
 
         try:
-            result = md.convert(tmp_path)
             filename_without_ext = _safe_filename(Path(file.filename or "").stem)
             try:
-                text_content = _apply_anonymization(result.text_content, anonymize, entities)
+                raw_text = _extract_markdown(tmp_path, file_extension)
+            except (ImportError, OSError) as e:
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"OCR no disponible: {e}",
+                )
+            try:
+                text_content = _apply_anonymization(raw_text, anonymize, entities)
             except (ImportError, OSError) as e:
                 raise HTTPException(
                     status_code=503,
