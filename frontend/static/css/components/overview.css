@@ -1,0 +1,43 @@
+/* Sección "Qué hace": rejilla de tarjetas de características. */
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-3);
+}
+
+.feature-card {
+    padding: var(--space-4);
+    background: var(--glass-bg-soft);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm), var(--glass-highlight);
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out);
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-md), var(--glass-highlight);
+}
+
+.feature-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: var(--space-2);
+}
+
+.feature-card h3 {
+    font-size: 0.98rem;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+    color: var(--color-fg);
+}
+
+.feature-card p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--color-fg-muted);
+}

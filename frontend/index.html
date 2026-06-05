@@ -14,10 +14,46 @@
     <div class="container">
         <header class="header">
             <h1>📝 MarkItDown GUI</h1>
-            <p class="subtitle">Convierte tus documentos a Markdown y, opcionalmente, anonimiza datos sensibles (DNI, nombres, emails…)</p>
+            <p class="subtitle">Convierte PDF, Office, imágenes y más a Markdown. Con OCR, anonimización de datos sensibles, compactación y estimación de tokens — todo procesado en local.</p>
         </header>
 
         <main class="main-content">
+            <!-- Qué hace la app -->
+            <section class="overview" aria-label="Qué hace la app">
+                <div class="overview-grid">
+                    <article class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Conversión multi-formato</h3>
+                        <p>PDF, Word, Excel, PowerPoint, HTML, EPUB, audio e imágenes a Markdown limpio.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">🖼️</div>
+                        <h3>OCR de imágenes</h3>
+                        <p>Extrae el texto de imágenes (PNG, JPG…) con Tesseract, en tu equipo.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">🕵️</div>
+                        <h3>Anonimización PII</h3>
+                        <p>Quita DNI/NIE, nombres, emails, teléfonos e IBAN con Microsoft Presidio.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">🗜️</div>
+                        <h3>Compactación</h3>
+                        <p>Reduce los tokens del Markdown sin perder contenido, con el % de ahorro.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">🔢</div>
+                        <h3>Estimación de tokens</h3>
+                        <p>Cuánto ocuparía en ChatGPT, Claude, Gemini/NotebookLM y Kimi.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>Privado y efímero</h3>
+                        <p>Sin cuentas ni almacenamiento: los archivos se procesan y se descartan.</p>
+                    </article>
+                </div>
+            </section>
+
             <!-- Sección de carga de archivos -->
             <section class="upload-section">
                 <div class="upload-area" id="uploadArea">

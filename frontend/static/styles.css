@@ -6,6 +6,7 @@
 @import url("css/base.css")   layer(base);     /* reset, tipografía, body */
 @import url("css/layout.css") layer(layout);   /* container, header, footer */
 
+@import url("css/components/overview.css")   layer(components);
 @import url("css/components/admonition.css") layer(components);
 @import url("css/components/upload.css")     layer(components);
 @import url("css/components/formats.css")    layer(components);

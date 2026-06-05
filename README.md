@@ -1,6 +1,10 @@
 # MarkItDown GUI
 
-Una interfaz gráfica web moderna para convertir múltiples formatos de archivo a Markdown usando [Microsoft MarkItDown](https://github.com/microsoft/markitdown).
+Interfaz web para convertir documentos (PDF, Office, HTML, EPUB, imágenes, audio…) a **Markdown**, construida sobre [Microsoft MarkItDown](https://github.com/microsoft/markitdown).
+
+Va más allá de la conversión: **OCR** del texto de imágenes con Tesseract, **anonimización** de datos sensibles (DNI, nombres, emails, IBAN…) con [Microsoft Presidio](https://github.com/microsoft/presidio), **compactación sin pérdida** para reducir tokens, y **estimación de tokens** por plataforma (ChatGPT, Claude, Gemini/NotebookLM, Kimi). Todo se procesa **en local y de forma efímera**: sin cuentas, sin almacenamiento y sin enviar tus documentos a terceros.
+
+> Pensada para preparar documentos —incluidos PDF reales como nóminas o formularios— antes de pegarlos en un LLM, quitando lo sensible y ajustando el tamaño.
 
 ## 🎯 Características
 
