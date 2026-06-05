@@ -73,7 +73,7 @@ export function renderTokenTable(text) {
                 <td><span class="token-platform" style="--token-color: ${p.color}">${platformLogo(p.key)}${escapeHtml(p.label)}</span></td>
                 <td class="token-num">≈ ${escapeHtml(formatTokenCount(tokens))}</td>
                 <td class="token-num">${escapeHtml(formatTokenCount(p.contextWindow))}</td>
-                <td class="${fits ? 'token-fit-ok' : 'token-fit-over'}">${fits ? '✓ Cabe' : '⚠ Supera'}</td>
+                <td><span class="token-pill ${fits ? 'ok' : 'over'}">${fits ? '✓ Cabe' : '⚠ Supera'}</span></td>
             </tr>
         `;
     }).join('');

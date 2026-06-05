@@ -15,6 +15,7 @@ const errorCount = document.getElementById('errorCount');
 const downloadAllBtn = document.getElementById('downloadAllBtn');
 const contentModal = document.getElementById('contentModal');
 const downloadBtn = document.getElementById('downloadBtn');
+const copyBtn = document.getElementById('copyBtn');
 
 // Mostrar resultados
 export function displayResults(data) {
@@ -118,6 +119,32 @@ function triggerDownload(result) {
     showToast(`Descargado: ${result.markdown_filename}`, 'ok');
 }
 
+// Copiar el contenido Markdown del modal al portapapeles.
+// Usa la Clipboard API y cae a execCommand si no está disponible (p. ej. en
+// orígenes http no seguros distintos de localhost).
+async function copyModalContent() {
+    const text = state.currentModalData?.markdown_content;
+    if (!text) return;
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        showToast('Markdown copiado al portapapeles', 'ok');
+    } catch (error) {
+        showToast(`No se pudo copiar: ${error.message}`, 'err');
+    }
+}
+
 // Descargar todos los resultados exitosos como un único ZIP (pedido al backend)
 async function downloadAll() {
     const all = state.conversionResults || [];
@@ -179,6 +206,9 @@ export function setupResults() {
     downloadBtn.addEventListener('click', () => {
         triggerDownload(state.currentModalData);
     });
+
+    // Copiar el Markdown del modal al portapapeles
+    copyBtn.addEventListener('click', () => copyModalContent());
 
     // Cerrar el <dialog> con los botones marcados (cabecera y pie)
     contentModal.querySelectorAll('[data-action="close-modal"]').forEach((el) => {
