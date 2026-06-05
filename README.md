@@ -11,6 +11,7 @@ Una interfaz gráfica web moderna para convertir múltiples formatos de archivo 
 - 📋 **Vista previa** - Visualiza el Markdown convertido antes de descargar (modal `<dialog>` nativo)
 - 💾 **Descarga individual o como ZIP** - Guarda cada `.md` por separado o todos en `conversiones.zip`
 - 🔢 **Estimación de tokens** - Calcula (heurística, en el navegador) cuántos tokens ocuparía cada documento en ChatGPT, Claude, Gemini/NotebookLM y Kimi, con indicador de si cabe en su ventana de contexto
+- 🗜️ **Compactación del Markdown** - Limpieza sin pérdida (colapsa líneas en blanco, espacios sobrantes, líneas duplicadas y comentarios HTML, respetando los bloques de código) que reduce los tokens; activada por defecto y con el **% de ahorro mostrado junto a la estimación de tokens**
 - 🕵️ **Anonimización de datos sensibles** - Opción para quitar PII (DNI/NIE, emails, nombres, teléfonos, IBAN, tarjetas, direcciones, IPs) del Markdown resultante mediante [Microsoft Presidio](https://github.com/microsoft/presidio). Se aplica también sobre el texto extraído por OCR
 - 🎨 **Interfaz moderna** - Diseño responsivo y accesible (contraste WCAG AA), sin build step ni framework: JavaScript en módulos ES nativos y CSS en parciales con `@layer`
 
@@ -119,7 +120,8 @@ markitdown_gui/
 ├── backend/
 │   ├── main.py              # Servidor FastAPI (endpoints + saneo + ZIP + no-cache)
 │   ├── anonymizer.py        # Anonimización de PII con Presidio (perezoso)
-│   └── ocr.py               # OCR de imágenes con Tesseract (perezoso)
+│   ├── ocr.py               # OCR de imágenes con Tesseract (perezoso)
+│   └── compactor.py         # Compactación sin pérdida del Markdown
 ├── frontend/
 │   ├── index.html           # Interfaz HTML (carga módulos ESM; modal <dialog>)
 │   └── static/
@@ -145,7 +147,8 @@ markitdown_gui/
 ├── tests/
 │   ├── test_api.py          # Tests del API (pytest + httpx)
 │   ├── test_anonymizer.py   # Tests de anonimización (DNI/NIE, email, endpoints)
-│   └── test_ocr.py          # Tests de OCR (enrutado, 503, errores en lote, OCR real)
+│   ├── test_ocr.py          # Tests de OCR (enrutado, 503, errores en lote, OCR real)
+│   └── test_compactor.py    # Tests de compactación (reglas lossless + endpoints)
 ├── install-fedora.sh        # Instalación desde cero en Fedora
 ├── install-ubuntu.sh        # Instalación desde cero en Ubuntu/Debian
 ├── pyproject.toml           # Configuración de dependencias (uv)
@@ -178,14 +181,14 @@ Retorna los tipos de datos sensibles que se pueden anonimizar
 ### POST `/api/convert`
 Convierte múltiples archivos
 - **Parámetro**: `files` (FormData con múltiples archivos)
-- **Opcional**: `anonymize` (`true`/`false`) y `anonymize_entities` (claves separadas por coma, p. ej. `email,dni_nie,person`)
-- **Retorna**: Array de resultados con contenido Markdown (cada resultado incluye `anonymized: bool`). Las imágenes se procesan por OCR; si el motor OCR no está disponible para un archivo, ese archivo aparece en `errors` sin abortar el resto.
+- **Opcional**: `anonymize` (`true`/`false`), `anonymize_entities` (claves separadas por coma, p. ej. `email,dni_nie,person`) y `compact` (`true`/`false`, por defecto `true`)
+- **Retorna**: Array de resultados con contenido Markdown (cada resultado incluye `anonymized: bool` y `original_chars`, la longitud antes de compactar, para calcular el % de ahorro). Las imágenes se procesan por OCR; si el motor OCR no está disponible para un archivo, ese archivo aparece en `errors` sin abortar el resto.
 
 ### POST `/api/convert-single`
 Convierte un único archivo
 - **Parámetro**: `file` (FormData con un archivo)
-- **Opcional**: `anonymize` y `anonymize_entities` (igual que en `/api/convert`)
-- **Retorna**: Resultado con contenido Markdown. Devuelve `503` si se pidió procesar una imagen y el motor OCR (Tesseract) no está disponible, o si se pidió anonimizar y el motor de anonimización no lo está.
+- **Opcional**: `anonymize`, `anonymize_entities` y `compact` (igual que en `/api/convert`)
+- **Retorna**: Resultado con contenido Markdown (incluye `original_chars`). Devuelve `503` si se pidió procesar una imagen y el motor OCR (Tesseract) no está disponible, o si se pidió anonimizar y el motor de anonimización no lo está.
 
 ### POST `/api/zip`
 Empaqueta varios .md generados por el cliente en un único `conversiones.zip`.
