@@ -444,7 +444,35 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+
+/* Botón para seguir añadiendo documentos a la lista a convertir */
+.add-more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
     margin-bottom: var(--space-5);
+    background: transparent;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    color: var(--color-fg-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.add-more-btn:hover {
+    background: var(--color-surface-2);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 .file-item {

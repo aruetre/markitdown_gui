@@ -106,6 +106,7 @@ const progressSection = document.getElementById('progressSection');
 const resultsSection = document.getElementById('resultsSection');
 const convertBtn = document.getElementById('convertBtn');
 const clearBtn = document.getElementById('clearBtn');
+const addMoreBtn = document.getElementById('addMoreBtn');
 const newConversionBtn = document.getElementById('newConversionBtn');
 const contentModal = document.getElementById('contentModal');
 const downloadBtn = document.getElementById('downloadBtn');
@@ -225,18 +226,15 @@ function setupEventListeners() {
     // Botones
     convertBtn.addEventListener('click', convertFiles);
     clearBtn.addEventListener('click', clearFiles);
+    addMoreBtn.addEventListener('click', () => fileInput.click());
     newConversionBtn.addEventListener('click', resetUI);
     downloadAllBtn.addEventListener('click', downloadAll);
 }
 
-// Manejar archivos seleccionados
+// Manejar archivos seleccionados (acumula sobre los ya añadidos)
 function handleFiles(files) {
-    selectedFiles = Array.from(files);
-    
-    if (selectedFiles.length === 0) return;
-    
-    // Validar extensiones
-    selectedFiles = selectedFiles.filter(file => {
+    // Validar extensiones de lo recién soltado/seleccionado
+    const incoming = Array.from(files).filter(file => {
         const ext = extOf(file.name);
         if (!supportedFormats[ext]) {
             console.warn(`Formato no soportado: ${file.name}`);
@@ -244,12 +242,27 @@ function handleFiles(files) {
         }
         return true;
     });
-    
-    if (selectedFiles.length === 0) {
-        alert('No hay archivos con formatos soportados');
+
+    // Permite volver a elegir el mismo archivo en una selección posterior
+    fileInput.value = '';
+
+    if (incoming.length === 0) {
+        if (selectedFiles.length === 0) {
+            alert('No hay archivos con formatos soportados');
+        }
         return;
     }
-    
+
+    // Añadir solo los que no estén ya en la lista (mismo nombre y tamaño)
+    const seen = new Set(selectedFiles.map(f => `${f.name}|${f.size}`));
+    for (const file of incoming) {
+        const key = `${file.name}|${file.size}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            selectedFiles.push(file);
+        }
+    }
+
     renderFilesList();
     uploadArea.style.display = 'none';
     filesSection.style.display = 'block';
