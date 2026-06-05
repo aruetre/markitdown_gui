@@ -240,6 +240,7 @@ async def convert_files(
                         "markdown_filename": f"{filename_without_ext}.md",
                         "anonymized": bool(anonymize and entities),
                         "original_chars": original_chars,
+                        "compacted": compact,
                         "status": "success",
                     }
                 )
@@ -324,6 +325,7 @@ async def convert_single_file(
                     "markdown_filename": f"{filename_without_ext}.md",
                     "anonymized": bool(anonymize and entities),
                     "original_chars": original_chars,
+                    "compacted": compact,
                     "status": "success",
                 }
             )

@@ -79,6 +79,7 @@ def test_convert_single_compacta_por_defecto(monkeypatch):
     assert body["original_chars"] == len(_BLOATED)
     assert len(body["markdown_content"]) < body["original_chars"]
     assert "\n\n\n" not in body["markdown_content"]
+    assert body["compacted"] is True
 
 
 def test_convert_single_sin_compactar_conserva(monkeypatch):
@@ -93,6 +94,7 @@ def test_convert_single_sin_compactar_conserva(monkeypatch):
     # Sin compactar: el texto se devuelve tal cual y original_chars coincide.
     assert body["markdown_content"] == _BLOATED
     assert body["original_chars"] == len(_BLOATED)
+    assert body["compacted"] is False
 
 
 def test_convert_multi_compacta_por_defecto(monkeypatch):

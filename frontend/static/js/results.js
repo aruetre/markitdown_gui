@@ -78,7 +78,7 @@ export function displayResults(data) {
                             <div class="result-details">
                                 <div class="result-filename">${escapeHtml(result.markdown_filename)}${anonTag}</div>
                                 <div class="result-format">De: ${sourceIcon} ${escapeHtml(result.original_filename)} (${escapeHtml(result.format)})${elapsed}</div>
-                                ${renderTokenBadges(result.markdown_content, renderCompressionBadge(result.original_chars, result.markdown_content))}
+                                ${renderTokenBadges(result.markdown_content, renderCompressionBadge(result.compacted, result.original_chars, result.markdown_content))}
                             </div>
                         </div>
                         <div class="result-actions">
@@ -104,7 +104,7 @@ function viewContent(index) {
 
     document.getElementById('modalTitle').textContent = result.markdown_filename;
     document.getElementById('modalTokens').innerHTML =
-        renderCompressionPanel(result.original_chars, result.markdown_content) +
+        renderCompressionPanel(result.compacted, result.original_chars, result.markdown_content) +
         renderTokenTable(result.markdown_content);
     document.getElementById('modalPreview').textContent = result.markdown_content;
 

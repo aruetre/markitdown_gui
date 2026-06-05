@@ -105,22 +105,37 @@ function compressionStats(originalChars, text) {
     return { originalChars, finalChars, savedChars, pct, savedTokens };
 }
 
-// Pieza compacta "🗜️ −18%" para la fila de tokens de cada resultado (o '' si no aplica).
-export function renderCompressionBadge(originalChars, text) {
+// Pieza de la fila de tokens. Solo se muestra si se compactó (`compacted`):
+// "🗜️ −18%" si hubo ahorro, o "🗜️ sin reducción" si el texto ya estaba compacto.
+export function renderCompressionBadge(compacted, originalChars, text) {
+    if (!compacted) return '';
     const s = compressionStats(originalChars, text);
-    if (!s) return '';
-    const title =
-        `Compactado sin pérdida: ${formatTokenCount(s.originalChars)} → ` +
-        `${formatTokenCount(s.finalChars)} caracteres (−${formatTokenCount(s.savedChars)}). ` +
-        'Se eliminaron líneas en blanco repetidas, espacios sobrantes y ' +
-        'comentarios HTML; el contenido no cambia.';
-    return `<span class="token-badge compress" title="${escapeHtml(title)}">🗜️ −${s.pct}%</span>`;
+    if (s) {
+        const title =
+            `Compactado sin pérdida: ${formatTokenCount(s.originalChars)} → ` +
+            `${formatTokenCount(s.finalChars)} caracteres (−${formatTokenCount(s.savedChars)}). ` +
+            'Se eliminaron líneas en blanco repetidas, espacios sobrantes y ' +
+            'comentarios HTML; el contenido no cambia.';
+        return `<span class="token-badge compress" title="${escapeHtml(title)}">🗜️ −${s.pct}%</span>`;
+    }
+    const noChange =
+        'Compactación aplicada, pero el texto ya estaba compacto: no había ' +
+        'líneas en blanco de más, espacios sobrantes ni comentarios HTML que quitar ' +
+        '(habitual en texto de OCR; el mayor ahorro suele venir de PDF/Office).';
+    return `<span class="token-badge compress" title="${escapeHtml(noChange)}">🗜️ sin reducción</span>`;
 }
 
-// Panel informativo de compresión para el modal (o '' si no aplica).
-export function renderCompressionPanel(originalChars, text) {
+// Panel informativo de compresión para el modal. Solo si se compactó (`compacted`).
+export function renderCompressionPanel(compacted, originalChars, text) {
+    if (!compacted) return '';
     const s = compressionStats(originalChars, text);
-    if (!s) return '';
+    if (!s) {
+        return `
+        <div class="compress-panel">
+            <p class="compress-note">🗜️ Compactación aplicada. El texto ya estaba compacto: no había nada que reducir (0%).</p>
+        </div>
+    `;
+    }
     return `
         <div class="compress-panel">
             <div class="compress-row">
