@@ -2,7 +2,12 @@
 import { state } from './state.js';
 import { requestZip } from './api.js';
 import { escapeHtml, extOf, formatElapsed, getFileIcon } from './utils.js';
-import { renderTokenBadges, renderTokenTable } from './tokens.js';
+import {
+    renderTokenBadges,
+    renderTokenTable,
+    renderCompressionBadge,
+    renderCompressionPanel,
+} from './tokens.js';
 import { showToast } from './toast.js';
 
 const progressSection = document.getElementById('progressSection');
@@ -73,7 +78,7 @@ export function displayResults(data) {
                             <div class="result-details">
                                 <div class="result-filename">${escapeHtml(result.markdown_filename)}${anonTag}</div>
                                 <div class="result-format">De: ${sourceIcon} ${escapeHtml(result.original_filename)} (${escapeHtml(result.format)})${elapsed}</div>
-                                ${renderTokenBadges(result.markdown_content)}
+                                ${renderTokenBadges(result.markdown_content, renderCompressionBadge(result.original_chars, result.markdown_content))}
                             </div>
                         </div>
                         <div class="result-actions">
@@ -98,7 +103,9 @@ function viewContent(index) {
     state.currentModalData = result;
 
     document.getElementById('modalTitle').textContent = result.markdown_filename;
-    document.getElementById('modalTokens').innerHTML = renderTokenTable(result.markdown_content);
+    document.getElementById('modalTokens').innerHTML =
+        renderCompressionPanel(result.original_chars, result.markdown_content) +
+        renderTokenTable(result.markdown_content);
     document.getElementById('modalPreview').textContent = result.markdown_content;
 
     contentModal.showModal();

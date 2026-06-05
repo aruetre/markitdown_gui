@@ -52,7 +52,7 @@ function abbreviateTokens(n) {
 }
 
 // Fila de badges (uno por plataforma) con estimación e indicador de ajuste
-export function renderTokenBadges(text) {
+export function renderTokenBadges(text, prefix = '') {
     const badges = TOKEN_PLATFORMS.map((p) => {
         const tokens = estimateTokens(text, p.charsPerToken);
         const fits = tokens <= p.contextWindow;
@@ -60,7 +60,7 @@ export function renderTokenBadges(text) {
         const mark = fits ? '✓' : '⚠';
         return `<span class="${cls}" style="--token-color: ${p.color}" title="${escapeHtml(p.label)}: ≈${escapeHtml(formatTokenCount(tokens))} tokens">${platformLogo(p.key)}${escapeHtml(p.label)} ≈${escapeHtml(abbreviateTokens(tokens))} ${mark}</span>`;
     }).join('');
-    return `<div class="token-badges" aria-label="Estimación de tokens por plataforma">${badges}</div>`;
+    return `<div class="token-badges" aria-label="Estimación de tokens por plataforma">${prefix}${badges}</div>`;
 }
 
 // Tabla detallada de tokens por plataforma para el modal
@@ -90,5 +90,48 @@ export function renderTokenTable(text) {
             <tbody>${rows}</tbody>
         </table>
         <p class="token-note">Estimación aproximada (heurística por caracteres). Las ventanas de contexto son típicas y pueden variar por modelo.</p>
+    `;
+}
+
+// Estadísticas de compresión a partir de los caracteres originales y el texto final.
+// Devuelve null si no hubo ahorro (o no se compactó).
+function compressionStats(originalChars, text) {
+    const finalChars = text ? text.length : 0;
+    if (!originalChars || originalChars <= finalChars) return null;
+    const savedChars = originalChars - finalChars;
+    const pct = Math.round((savedChars / originalChars) * 100);
+    if (pct <= 0) return null;
+    const savedTokens = Math.round(savedChars / 4.0); // charsPerToken representativo
+    return { originalChars, finalChars, savedChars, pct, savedTokens };
+}
+
+// Pieza compacta "🗜️ −18%" para la fila de tokens de cada resultado (o '' si no aplica).
+export function renderCompressionBadge(originalChars, text) {
+    const s = compressionStats(originalChars, text);
+    if (!s) return '';
+    const title =
+        `Compactado sin pérdida: ${formatTokenCount(s.originalChars)} → ` +
+        `${formatTokenCount(s.finalChars)} caracteres (−${formatTokenCount(s.savedChars)}). ` +
+        'Se eliminaron líneas en blanco repetidas, espacios sobrantes, líneas ' +
+        'duplicadas y comentarios HTML; el contenido no cambia.';
+    return `<span class="token-badge compress" title="${escapeHtml(title)}">🗜️ −${s.pct}%</span>`;
+}
+
+// Panel informativo de compresión para el modal (o '' si no aplica).
+export function renderCompressionPanel(originalChars, text) {
+    const s = compressionStats(originalChars, text);
+    if (!s) return '';
+    return `
+        <div class="compress-panel">
+            <div class="compress-row">
+                <span>Caracteres</span>
+                <strong>${escapeHtml(formatTokenCount(s.originalChars))} → ${escapeHtml(formatTokenCount(s.finalChars))} (−${s.pct}%)</strong>
+            </div>
+            <div class="compress-row">
+                <span>Tokens ahorrados (aprox.)</span>
+                <strong>≈ −${escapeHtml(formatTokenCount(s.savedTokens))}</strong>
+            </div>
+            <p class="compress-note">Compactación sin pérdida: blancos, espacios, duplicados y comentarios HTML.</p>
+        </div>
     `;
 }
