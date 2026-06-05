@@ -24,6 +24,22 @@ app = FastAPI(title="MarkItDown GUI")
 
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
+
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    """Fuerza revalidación de HTML/JS/CSS en el navegador.
+
+    Sin esto, tras cambiar el frontend el navegador puede servir versiones
+    obsoletas desde caché (síntoma típico: errores de funciones inexistentes o
+    estilos viejos hasta hacer Ctrl+Shift+R). `no-cache` no impide cachear: el
+    navegador revalida con el ETag/Last-Modified que ya emite StaticFiles, así
+    que se reusa el archivo (304) si no cambió y se recarga (200) si cambió.
+    """
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 # Plugins desactivados: cargarían cualquier paquete instalado y amplían superficie sin necesidad real aquí
 md = MarkItDown(enable_plugins=False)
 
