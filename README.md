@@ -16,7 +16,7 @@ Va más allá de la conversión: **OCR** del texto de imágenes con Tesseract, *
 - 💾 **Descarga individual o como ZIP** - Guarda cada `.md` por separado o todos en `conversiones.zip`
 - 🔢 **Estimación de tokens** - Calcula (heurística, en el navegador) cuántos tokens ocuparía cada documento en ChatGPT, Claude, Gemini/NotebookLM y Kimi, con indicador de si cabe en su ventana de contexto
 - 🗜️ **Compactación del Markdown** - Limpieza sin pérdida (colapsa líneas en blanco, espacios sobrantes y comentarios HTML, y quita filas de tabla vacías, respetando los bloques de código) que reduce los tokens; activada por defecto y con el **% de ahorro mostrado junto a la estimación de tokens**
-- 🕵️ **Anonimización de datos sensibles** - Opción para quitar PII (DNI/NIE, emails, nombres, teléfonos, IBAN, tarjetas, direcciones, IPs) del Markdown resultante mediante [Microsoft Presidio](https://github.com/microsoft/presidio). Se aplica también sobre el texto extraído por OCR
+- 🕵️ **Anonimización de datos sensibles** - Opción para quitar PII (DNI/NIE, Nº Seguridad Social, CIF/NIF de empresa, emails, nombres, teléfonos, IBAN, tarjetas, matrículas, fechas, direcciones, IPs) del Markdown resultante mediante [Microsoft Presidio](https://github.com/microsoft/presidio). Se aplica también sobre el texto extraído por OCR
 - 🎨 **Interfaz moderna** - Diseño responsivo y accesible (contraste WCAG AA), sin build step ni framework: JavaScript en módulos ES nativos y CSS en parciales con `@layer`
 
 ## 📦 Formatos Soportados

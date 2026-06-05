@@ -71,6 +71,35 @@ ENTITY_CONFIG = [
         "default": False,
     },
     {"key": "ip", "entity": "IP_ADDRESS", "label": "Dirección IP", "tag": "[IP]", "default": True},
+    {
+        "key": "social_security",
+        "entity": "ES_NSS",
+        "label": "Nº Seguridad Social",
+        "tag": "[NSS]",
+        "default": True,
+    },
+    {
+        "key": "company_id",
+        "entity": "ES_CIF",
+        "label": "CIF / NIF de empresa",
+        "tag": "[CIF]",
+        "default": True,
+    },
+    {
+        "key": "vehicle_plate",
+        "entity": "ES_PLATE",
+        "label": "Matrícula",
+        "tag": "[MATRICULA]",
+        "default": True,
+    },
+    # DATE_TIME es ruidoso (marca cualquier fecha), por eso viene desmarcado.
+    {
+        "key": "date",
+        "entity": "DATE_TIME",
+        "label": "Fecha",
+        "tag": "[FECHA]",
+        "default": False,
+    },
 ]
 
 _BY_KEY = {e["key"]: e for e in ENTITY_CONFIG}
@@ -119,6 +148,35 @@ def _valid_iban_es(text: str) -> bool:
     rearranged = s[4:] + s[:4]
     digits = "".join(str(int(c, 36)) for c in rearranged)
     return int(digits) % 97 == 1
+
+
+def _valid_nss(text: str) -> bool:
+    """Valida un Nº de la Seguridad Social (12 dígitos): los 2 últimos son el
+    control de los 10 primeros (provincia + número) por módulo 97."""
+    digits = re.sub(r"\D", "", text)
+    if len(digits) != 12:
+        return False
+    return int(digits[10:]) == int(digits[:10]) % 97
+
+
+def _valid_cif(text: str) -> bool:
+    """Valida un CIF español (letra de organización + 7 dígitos + control)."""
+    s = text.strip().upper()
+    if not re.fullmatch(r"[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]", s):
+        return False
+    letter, digits, control = s[0], s[1:8], s[8]
+    suma_par = sum(int(digits[i]) for i in (1, 3, 5))
+    suma_impar = 0
+    for i in (0, 2, 4, 6):
+        doble = int(digits[i]) * 2
+        suma_impar += doble // 10 + doble % 10
+    dc = (10 - (suma_par + suma_impar) % 10) % 10
+    control_letter = "JABCDEFGHI"[dc]
+    if letter in "PQRSNW":  # control siempre letra
+        return control == control_letter
+    if letter in "ABEH":  # control siempre número
+        return control == str(dc)
+    return control == str(dc) or control == control_letter
 
 
 def _build_dni_nie_recognizer():
@@ -192,6 +250,79 @@ def _build_labeled_person_recognizer():
     return LabeledPersonRecognizer()
 
 
+def _build_nss_recognizer():
+    from presidio_analyzer import Pattern, PatternRecognizer
+
+    class NssRecognizer(PatternRecognizer):
+        """Nº de la Seguridad Social (12 dígitos) validado por módulo 97."""
+
+        def __init__(self):
+            patterns = [Pattern("ES NSS", r"\b\d{2}[ /-]?\d{8}[ /-]?\d{2}\b", 0.3)]
+            super().__init__(supported_entity="ES_NSS", patterns=patterns, supported_language="es")
+
+        def validate_result(self, pattern_text: str):
+            return _valid_nss(pattern_text)
+
+    return NssRecognizer()
+
+
+def _build_cif_recognizer():
+    from presidio_analyzer import Pattern, PatternRecognizer
+
+    class CifRecognizer(PatternRecognizer):
+        """CIF/NIF de empresa con validación del dígito/letra de control."""
+
+        def __init__(self):
+            patterns = [Pattern("ES CIF", r"\b[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]\b", 0.3)]
+            super().__init__(supported_entity="ES_CIF", patterns=patterns, supported_language="es")
+
+        def validate_result(self, pattern_text: str):
+            return _valid_cif(pattern_text)
+
+    return CifRecognizer()
+
+
+def _build_plate_recognizer():
+    from presidio_analyzer import Pattern, PatternRecognizer
+
+    class PlateRecognizer(PatternRecognizer):
+        """Matrícula española actual: 4 dígitos + 3 consonantes (sin vocales ni Q/Ñ)."""
+
+        def __init__(self):
+            patterns = [Pattern("ES plate", r"\b\d{4}[ -]?[BCDFGHJKLMNPRSTVWXYZ]{3}\b", 0.4)]
+            super().__init__(
+                supported_entity="ES_PLATE", patterns=patterns, supported_language="es"
+            )
+
+    return PlateRecognizer()
+
+
+def _build_date_recognizer():
+    from presidio_analyzer import Pattern, PatternRecognizer
+
+    meses = (
+        "enero|febrero|marzo|abril|mayo|junio|julio|agosto|"
+        "septiembre|setiembre|octubre|noviembre|diciembre"
+    )
+
+    class SpanishDateRecognizer(PatternRecognizer):
+        """Fechas en formatos habituales en español (numéricas, ISO y «d de mes de aaaa»)."""
+
+        def __init__(self):
+            patterns = [
+                Pattern("fecha numérica", r"\b\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}\b", 0.6),
+                Pattern("fecha ISO", r"\b\d{4}[/.\-]\d{1,2}[/.\-]\d{1,2}\b", 0.6),
+                Pattern(
+                    "fecha larga", r"(?i)\b\d{1,2}\s+de\s+(?:" + meses + r")\s+de\s+\d{4}\b", 0.7
+                ),
+            ]
+            super().__init__(
+                supported_entity="DATE_TIME", patterns=patterns, supported_language="es"
+            )
+
+    return SpanishDateRecognizer()
+
+
 def _get_engines():
     """Construye (una vez) y devuelve (AnalyzerEngine, AnonymizerEngine)."""
     global _engines
@@ -218,6 +349,10 @@ def _get_engines():
         registry.add_recognizer(_build_dni_nie_recognizer())
         registry.add_recognizer(_build_iban_recognizer())
         registry.add_recognizer(_build_labeled_person_recognizer())
+        registry.add_recognizer(_build_nss_recognizer())
+        registry.add_recognizer(_build_cif_recognizer())
+        registry.add_recognizer(_build_plate_recognizer())
+        registry.add_recognizer(_build_date_recognizer())
         # Mantener el registro y el analyzer consistentes en idioma.
         registry.supported_languages = ["es"]
 

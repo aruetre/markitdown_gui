@@ -6,7 +6,13 @@ dependen del modelo spaCy; se marcan como tolerantes.
 
 from fastapi.testclient import TestClient
 
-from backend.anonymizer import _valid_dni_nie, anonymize_text, available_options
+from backend.anonymizer import (
+    _valid_cif,
+    _valid_dni_nie,
+    _valid_nss,
+    anonymize_text,
+    available_options,
+)
 from backend.main import app
 
 client = TestClient(app)
@@ -30,6 +36,23 @@ def test_nie_valido():
 def test_dni_formato_invalido():
     assert _valid_dni_nie("1234567Z") is False  # solo 7 dígitos
     assert _valid_dni_nie("ABCDEFGHZ") is False
+
+
+# --- Validación de Nº Seguridad Social y CIF (determinista) ---
+
+
+def test_nss_valido_e_invalido():
+    base = "2801234567"  # 10 dígitos (provincia + número)
+    valido = base + f"{int(base) % 97:02d}"
+    assert _valid_nss(valido) is True
+    assert _valid_nss(valido[:-2] + ("99" if valido[-2:] != "99" else "00")) is False
+    assert _valid_nss("123") is False  # longitud incorrecta
+
+
+def test_cif_valido_e_invalido():
+    assert _valid_cif("A58818501") is True
+    assert _valid_cif("A58818502") is False  # control erróneo
+    assert _valid_cif("12345678Z") is False  # eso es un DNI, no un CIF
 
 
 # --- available_options ---
@@ -101,6 +124,28 @@ def test_anonymize_nombre_por_etiqueta_en_mayusculas():
     out = anonymize_text(txt, ["person"])
     assert "[NOMBRE]" in out
     assert "RUEDA TREVIÑO" not in out
+
+
+def test_anonymize_nss():
+    base = "2801234567"
+    nss = base + f"{int(base) % 97:02d}"
+    out = anonymize_text(f"Nº afiliación: {nss}", ["social_security"])
+    assert "[NSS]" in out and nss not in out
+
+
+def test_anonymize_cif():
+    out = anonymize_text("Empresa con CIF A58818501 en nómina", ["company_id"])
+    assert "[CIF]" in out and "A58818501" not in out
+
+
+def test_anonymize_matricula():
+    out = anonymize_text("Vehículo 1234 BCD aparcado", ["vehicle_plate"])
+    assert "[MATRICULA]" in out and "1234 BCD" not in out
+
+
+def test_anonymize_fecha():
+    out = anonymize_text("Fecha de alta: 12/01/2024.", ["date"])
+    assert "[FECHA]" in out and "12/01/2024" not in out
 
 
 # --- API ---
