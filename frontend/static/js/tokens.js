@@ -112,8 +112,8 @@ export function renderCompressionBadge(originalChars, text) {
     const title =
         `Compactado sin pérdida: ${formatTokenCount(s.originalChars)} → ` +
         `${formatTokenCount(s.finalChars)} caracteres (−${formatTokenCount(s.savedChars)}). ` +
-        'Se eliminaron líneas en blanco repetidas, espacios sobrantes, líneas ' +
-        'duplicadas y comentarios HTML; el contenido no cambia.';
+        'Se eliminaron líneas en blanco repetidas, espacios sobrantes y ' +
+        'comentarios HTML; el contenido no cambia.';
     return `<span class="token-badge compress" title="${escapeHtml(title)}">🗜️ −${s.pct}%</span>`;
 }
 
@@ -131,7 +131,7 @@ export function renderCompressionPanel(originalChars, text) {
                 <span>Tokens ahorrados (aprox.)</span>
                 <strong>≈ −${escapeHtml(formatTokenCount(s.savedTokens))}</strong>
             </div>
-            <p class="compress-note">Compactación sin pérdida: blancos, espacios, duplicados y comentarios HTML.</p>
+            <p class="compress-note">Compactación sin pérdida: blancos, espacios y comentarios HTML.</p>
         </div>
     `;
 }

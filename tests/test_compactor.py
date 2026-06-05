@@ -27,12 +27,14 @@ def test_quita_comentarios_html():
     assert compact_markdown("a\n<!-- nota\nmultilinea -->\nb") == "a\n\nb"
 
 
-def test_dedup_lineas_identicas_consecutivas():
-    assert compact_markdown("Pagina 1\nPagina 1\ntexto") == "Pagina 1\ntexto"
+def test_conserva_lineas_duplicadas_consecutivas():
+    # Lossless: dos líneas idénticas pueden ser datos legítimos; no se deduplican.
+    assert compact_markdown("Pagina 1\nPagina 1\ntexto") == "Pagina 1\nPagina 1\ntexto"
 
 
-def test_dedup_con_blanco_entre_medias():
-    assert compact_markdown("Cabecera\n\nCabecera\n\nCuerpo") == "Cabecera\n\nCuerpo"
+def test_conserva_filas_de_tabla_duplicadas():
+    md = "| Pago | 100 |\n| Pago | 100 |"
+    assert compact_markdown(md) == md
 
 
 def test_quita_filas_de_tabla_vacias():

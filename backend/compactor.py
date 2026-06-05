@@ -1,9 +1,11 @@
 """Compactación sin pérdida del Markdown para reducir tokens.
 
 Quita "paja" del Markdown (líneas en blanco repetidas, espacios sobrantes,
-caracteres invisibles, comentarios HTML, líneas duplicadas consecutivas y filas
-de tabla vacías) sin alterar el significado. Los bloques de código cercados
-(``` o ~~~) se dejan intactos. La función es determinista e idempotente.
+caracteres invisibles, comentarios HTML y filas de tabla vacías) sin alterar el
+significado: todo lo que elimina es semánticamente inocuo. NO deduplica líneas de
+contenido (dos filas o párrafos idénticos podrían ser datos legítimos, p. ej. en
+una nómina). Los bloques de código cercados (``` o ~~~) se dejan intactos. La
+función es determinista e idempotente.
 """
 
 from __future__ import annotations
@@ -57,11 +59,6 @@ def compact_markdown(text: str) -> str:
             continue
 
         if _EMPTY_TABLE_ROW.match(line):
-            continue
-
-        # Dedup de líneas idénticas consecutivas (también con blanco entre medias).
-        if out and out[-1] == line:
-            pending_blank = False
             continue
 
         if pending_blank:
