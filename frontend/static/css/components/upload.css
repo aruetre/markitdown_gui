@@ -42,15 +42,26 @@
 }
 
 .upload-icon {
-    font-size: 2.5rem;
-    margin-bottom: var(--space-3);
-    display: inline-block;
-    transition: transform var(--duration-base) var(--ease-out);
+    font-size: 2.25rem;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 32%, var(--color-primary-soft), transparent 72%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-highlight), var(--shadow-sm);
+    transition:
+        transform var(--duration-base) var(--ease-out),
+        box-shadow var(--duration-base) var(--ease-out);
 }
 
 .upload-area:hover .upload-icon,
 .upload-area.dragover .upload-icon {
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: var(--glass-highlight), var(--shadow-md);
 }
 
 .upload-area h2 {

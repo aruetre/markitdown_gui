@@ -33,13 +33,17 @@
     transition:
         background-color var(--duration-fast) var(--ease-out),
         border-color var(--duration-fast) var(--ease-out),
-        color var(--duration-fast) var(--ease-out);
+        color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .format-badge:hover {
     border-color: var(--color-primary);
     color: var(--color-fg);
     background: var(--color-primary-soft);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
 }
 
 .format-badge-icon {
