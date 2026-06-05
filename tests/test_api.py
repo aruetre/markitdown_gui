@@ -20,6 +20,9 @@ def test_static_assets_mounted():
     js = client.get("/static/script.js")
     assert css.status_code == 200
     assert js.status_code == 200
+    # Los módulos ES viven en subdirectorios servidos por el mismo montaje /static
+    module = client.get("/static/js/main.js")
+    assert module.status_code == 200
 
 
 def test_supported_formats_endpoint():

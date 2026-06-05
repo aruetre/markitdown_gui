@@ -1,0 +1,146 @@
+/* Sección de resultados: avisos, tarjetas y botones de cada resultado. */
+.info-box {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-3);
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+}
+
+.info-box.success {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border-color: var(--color-success);
+}
+
+.info-box.error {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border-color: var(--color-error);
+}
+
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.result-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.result-item:hover {
+    border-color: var(--color-border-strong);
+}
+
+.result-header {
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.result-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+}
+
+.result-status {
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.result-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.result-filename {
+    font-weight: 600;
+    color: var(--color-fg);
+    word-break: break-all;
+}
+
+.result-format {
+    font-size: 0.85rem;
+    color: var(--color-fg-subtle);
+    margin-top: 2px;
+}
+
+.result-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+.result-btn {
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: inherit;
+    white-space: nowrap;
+    transition:
+        background-color var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.result-btn.view {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-border-strong);
+}
+
+.result-btn.view:hover {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+}
+
+.result-btn.download {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: var(--color-primary);
+}
+
+.result-btn.download:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+.result-btn.error {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+}
+
+.result-error-message {
+    margin-top: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .result-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .result-actions {
+        width: 100%;
+    }
+    .result-btn { flex: 1; }
+}

@@ -48,7 +48,7 @@
             </section>
 
             <!-- Sección de archivos seleccionados -->
-            <section id="filesSection" class="files-section" style="display: none;">
+            <section id="filesSection" class="files-section" hidden>
                 <h2>Archivos seleccionados</h2>
                 <div id="filesList" class="files-list"></div>
                 <button id="addMoreBtn" class="add-more-btn" type="button">➕ Añadir más archivos</button>
@@ -58,7 +58,7 @@
                         <input type="checkbox" id="anonymizeCheck">
                         <span>🕵️ Anonimizar datos sensibles</span>
                     </label>
-                    <div id="anonymizeOptions" class="anonymize-options" style="display: none;">
+                    <div id="anonymizeOptions" class="anonymize-options" hidden>
                         <p class="anonymize-hint">Selecciona qué quitar del Markdown resultante:</p>
                         <div id="anonymizeTypes" class="anonymize-types"></div>
                     </div>
@@ -71,7 +71,7 @@
             </section>
 
             <!-- Sección de progreso -->
-            <section id="progressSection" class="progress-section" style="display: none;">
+            <section id="progressSection" class="progress-section" hidden>
                 <h2>Procesando...</h2>
                 <div class="progress-container">
                     <div class="progress-bar">
@@ -87,14 +87,14 @@
             </section>
 
             <!-- Sección de resultados -->
-            <section id="resultsSection" class="results-section" style="display: none;">
+            <section id="resultsSection" class="results-section" hidden>
                 <h2>Resultados</h2>
-                
-                <div id="successInfo" class="info-box success" style="display: none;">
+
+                <div id="successInfo" class="info-box success" hidden>
                     <span id="successCount">0</span> archivo(s) convertido(s) exitosamente ✓
                 </div>
 
-                <div id="errorInfo" class="info-box error" style="display: none;">
+                <div id="errorInfo" class="info-box error" hidden>
                     <span id="errorCount">0</span> error(es) durante la conversión ✗
                 </div>
 
@@ -119,24 +119,24 @@
     <!-- Contenedor de notificaciones (toasts) -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Modal para mostrar/descargar contenido -->
-    <div id="contentModal" class="modal" style="display: none;">
+    <!-- Modal de vista previa / descarga (dialog nativo) -->
+    <dialog id="contentModal" class="modal" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">Contenido Markdown</h3>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <button class="modal-close" type="button" data-action="close-modal" aria-label="Cerrar">&times;</button>
             </div>
             <div class="modal-body">
                 <div id="modalTokens" class="token-table-wrap"></div>
                 <div id="modalPreview" class="modal-preview"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                <button class="btn btn-secondary" type="button" data-action="close-modal">Cerrar</button>
                 <button id="downloadBtn" class="btn btn-primary">Descargar</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
-    <script src="static/script.js"></script>
+    <script type="module" src="static/script.js"></script>
 </body>
 </html>

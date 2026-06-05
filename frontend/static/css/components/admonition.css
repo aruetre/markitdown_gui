@@ -1,0 +1,62 @@
+/* Admonition / aviso de privacidad. */
+.admonition {
+    padding: var(--space-4) var(--space-5);
+    background: var(--color-primary-soft);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-primary);
+    border-radius: var(--radius-md);
+}
+
+.admonition-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+}
+
+.admonition-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.admonition-lede {
+    font-size: 0.95rem;
+    color: var(--color-fg);
+    margin-bottom: var(--space-2);
+}
+
+.admonition-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.admonition-list li {
+    position: relative;
+    padding-left: var(--space-4);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--color-fg-muted);
+}
+
+.admonition-list li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0.55em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-primary);
+}
+
+.admonition-list li strong {
+    color: var(--color-fg);
+    font-weight: 600;
+}

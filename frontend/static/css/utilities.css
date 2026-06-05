@@ -1,0 +1,7 @@
+/* Utilidades. Capa final: anula a componentes si fuese necesario. */
+
+/* Oculta un elemento. Equivale al atributo `hidden`, pero como clase utilitaria.
+   !important para ganar a cualquier `display` de componente. */
+.hidden {
+    display: none !important;
+}

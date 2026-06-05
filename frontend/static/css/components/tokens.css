@@ -1,0 +1,108 @@
+/* Badges y tabla de estimación de tokens por plataforma. */
+.token-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.token-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    font-weight: 600;
+    /* Texto oscurecido respecto al color de marca para contrastar con el fondo suave */
+    color: color-mix(in srgb, var(--token-color, var(--color-fg-muted)), #000 22%);
+    background: color-mix(in srgb, var(--token-color, var(--color-fg-muted)) 12%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--token-color, var(--color-border)) 55%, transparent);
+    white-space: nowrap;
+}
+
+.token-badge.over {
+    color: var(--color-warning);
+    background: rgba(217, 119, 6, 0.1);
+    border-color: rgba(217, 119, 6, 0.35);
+}
+
+.token-logo {
+    width: 0.95em;
+    height: 0.95em;
+    flex-shrink: 0;
+}
+
+/* En oscuro el texto del badge se aclara respecto al color de marca */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .token-badge:not(.over) {
+        color: color-mix(in srgb, var(--token-color, var(--color-fg-muted)), #fff 18%);
+    }
+}
+
+[data-theme="dark"] .token-badge:not(.over) {
+    color: color-mix(in srgb, var(--token-color, var(--color-fg-muted)), #fff 18%);
+}
+
+/* Nombre de plataforma con logo en la tabla del modal */
+.token-platform {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--token-color, inherit);
+    font-weight: 600;
+}
+
+.token-platform .token-logo {
+    width: 1.05em;
+    height: 1.05em;
+}
+
+/* Tabla detallada de estimación de tokens en el modal */
+.token-table-wrap {
+    margin-bottom: var(--space-4);
+}
+
+.token-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.token-table th,
+.token-table td {
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.token-table th {
+    font-weight: 600;
+    color: var(--color-fg-muted);
+    background: var(--color-surface-2);
+}
+
+.token-table td {
+    color: var(--color-fg);
+}
+
+.token-table .token-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.token-fit-ok {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.token-fit-over {
+    color: var(--color-warning);
+    font-weight: 600;
+}
+
+.token-note {
+    margin-top: var(--space-2);
+    font-size: 0.75rem;
+    color: var(--color-fg-subtle);
+}

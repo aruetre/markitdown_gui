@@ -1,0 +1,132 @@
+/* Design tokens: variables :root + dark mode.
+   Dark mode: auto vía preferencia del sistema y override manual con
+   [data-theme="light"|"dark"] en <html>. */
+:root {
+    /* Color — light mode (default) */
+    --color-primary: #2563EB;
+    --color-primary-hover: #1D4ED8;
+    --color-primary-soft: rgba(37, 99, 235, 0.08);
+    --color-on-primary: #FFFFFF;
+
+    --color-accent: #D97706;
+
+    --color-bg: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-surface-2: #F1F5F9;
+    --color-surface-hover: #E2E8F0;
+
+    --color-fg: #0F172A;
+    --color-fg-muted: #334155;
+    --color-fg-subtle: #475569;
+
+    --color-border: #CBD5E1;
+    --color-border-strong: #94A3B8;
+
+    --color-success: #16A34A;
+    --color-success-bg: #DCFCE7;
+    --color-error: #DC2626;
+    --color-error-bg: #FEE2E2;
+    --color-warning: #D97706;
+
+    --color-ring: rgba(37, 99, 235, 0.45);
+
+    /* Spacing scale (4 / 8) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+
+    /* Radii */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-pill: 999px;
+
+    /* Elevation — soft, restrained */
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06);
+
+    /* Motion */
+    --ease-out: cubic-bezier(0.2, 0, 0, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --duration-fast: 150ms;
+    --duration-base: 200ms;
+    --duration-slow: 280ms;
+
+    /* Type */
+    --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Dark mode — auto via system preference. Manual override via [data-theme="light"|"dark"] on <html>. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --color-primary: #3B82F6;
+        --color-primary-hover: #60A5FA;
+        --color-primary-soft: rgba(59, 130, 246, 0.16);
+        --color-on-primary: #FFFFFF;
+
+        --color-accent: #F59E0B;
+
+        --color-bg: #0B1220;
+        --color-surface: #111827;
+        --color-surface-2: #1E293B;
+        --color-surface-hover: #273549;
+
+        --color-fg: #F1F5F9;
+        --color-fg-muted: #CBD5E1;
+        --color-fg-subtle: #94A3B8;
+
+        --color-border: #334155;
+        --color-border-strong: #475569;
+
+        --color-success: #4ADE80;
+        --color-success-bg: rgba(74, 222, 128, 0.12);
+        --color-error: #F87171;
+        --color-error-bg: rgba(248, 113, 113, 0.12);
+        --color-warning: #FBBF24;
+
+        --color-ring: rgba(96, 165, 250, 0.55);
+
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.45);
+        --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.55);
+    }
+}
+
+[data-theme="dark"] {
+    --color-primary: #3B82F6;
+    --color-primary-hover: #60A5FA;
+    --color-primary-soft: rgba(59, 130, 246, 0.16);
+    --color-accent: #F59E0B;
+    --color-bg: #0B1220;
+    --color-surface: #111827;
+    --color-surface-2: #1E293B;
+    --color-surface-hover: #273549;
+    --color-fg: #F1F5F9;
+    --color-fg-muted: #CBD5E1;
+    --color-fg-subtle: #94A3B8;
+    --color-border: #334155;
+    --color-border-strong: #475569;
+    --color-success: #4ADE80;
+    --color-success-bg: rgba(74, 222, 128, 0.12);
+    --color-error: #F87171;
+    --color-error-bg: rgba(248, 113, 113, 0.12);
+    --color-warning: #FBBF24;
+    --color-ring: rgba(96, 165, 250, 0.55);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.55);
+}

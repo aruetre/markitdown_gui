@@ -1,0 +1,103 @@
+/* Sección de progreso y log por archivo. */
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0;
+    background: var(--color-primary);
+    border-radius: var(--radius-pill);
+    transition: width var(--duration-slow) var(--ease-out);
+}
+
+.progress-text {
+    text-align: center;
+    color: var(--color-fg-muted);
+    font-size: 0.95rem;
+}
+
+.progress-current {
+    text-align: center;
+    color: var(--color-fg);
+    font-weight: 500;
+    font-size: 0.9rem;
+    min-height: 1.4em;
+}
+
+.progress-log-wrapper {
+    margin-top: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-2);
+    overflow: hidden;
+}
+
+.progress-log-summary {
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-fg-muted);
+    user-select: none;
+    list-style: none;
+    transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.progress-log-summary:hover {
+    background: var(--color-surface-hover);
+}
+
+.progress-log-summary::-webkit-details-marker {
+    display: none;
+}
+
+.progress-log-summary::before {
+    content: "";
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-right: var(--space-2);
+    border-style: solid;
+    border-width: 4px 0 4px 6px;
+    border-color: transparent transparent transparent var(--color-fg-subtle);
+    transition: transform var(--duration-fast) var(--ease-out);
+    vertical-align: middle;
+}
+
+.progress-log-wrapper[open] > .progress-log-summary::before {
+    transform: rotate(90deg);
+}
+
+.progress-log {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: var(--space-2);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+}
+
+.progress-log-item {
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--color-fg-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.progress-log-item.pending { color: var(--color-fg-subtle); }
+.progress-log-item.ok { color: var(--color-success); }
+.progress-log-item.err { color: var(--color-error); }
