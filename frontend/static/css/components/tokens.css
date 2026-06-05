@@ -61,6 +61,11 @@
 /* Tabla detallada de estimación de tokens en el modal */
 .token-table-wrap {
     margin-bottom: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
 
 .token-table {
@@ -73,7 +78,7 @@
 .token-table td {
     padding: var(--space-3);
     text-align: left;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .token-table th {
@@ -81,17 +86,21 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--color-fg-subtle);
-    background: transparent;
-    border-bottom: 1px solid var(--color-border-strong);
+    color: var(--color-fg-muted);
+    background: var(--color-surface-2);
+    border-bottom: 2px solid var(--color-border-strong);
 }
 
 .token-table tbody tr {
     transition: background-color var(--duration-fast) var(--ease-out);
 }
 
+.token-table tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--color-fg) 3.5%, transparent);
+}
+
 .token-table tbody tr:hover {
-    background: color-mix(in srgb, var(--color-fg) 5%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .token-table tbody tr:last-child td {
