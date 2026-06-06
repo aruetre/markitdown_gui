@@ -117,6 +117,34 @@ uv run python -m uvicorn backend.main:app --reload
 
 La aplicación estará disponible en: **http://localhost:8000**
 
+## 🚀 Despliegue (producción)
+
+Para servirla en un (sub)dominio con HTTPS, la app corre como servicio local (uvicorn en `127.0.0.1:8000`) y **Nginx** delante hace de proxy. En [deploy/](deploy/) tienes plantillas listas: `markitdown.service` (systemd) y `nginx-md.tudominio.es.conf` (Nginx).
+
+```bash
+# 1. Instalar en el servidor (ej. en /opt)
+cd /opt && sudo git clone https://github.com/aruetre/markitdown_gui.git
+sudo chown -R $USER:$USER markitdown_gui && cd markitdown_gui
+./install-ubuntu.sh
+
+# 2. Servicio (arranque automático). Ajusta User/rutas dentro del fichero.
+sudo cp deploy/markitdown.service /etc/systemd/system/markitdown.service
+sudo systemctl daemon-reload && sudo systemctl enable --now markitdown
+
+# 3. Nginx + HTTPS (cambia el dominio si no es md.tudominio.es)
+sudo cp deploy/nginx-md.tudominio.es.conf /etc/nginx/sites-available/md.tudominio.es
+sudo ln -s /etc/nginx/sites-available/md.tudominio.es /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo apt-get install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d md.tudominio.es
+```
+
+**Notas importantes:**
+- El servicio fija `WorkingDirectory` en la raíz del repo (la app usa rutas relativas) y arranca **sin `--reload`**.
+- `client_max_body_size 100M` en Nginx deja margen sobre el límite de 50 MB por archivo de la app.
+- **La app no tiene autenticación.** Si la expones en público, protégela (p. ej. *basic auth* en Nginx; ver comentarios en el `.conf`).
+- Con anonimización activa se carga el modelo de spaCy (~570 MB) por proceso; con 1 worker uvicorn va bien.
+
 ## 📁 Estructura del Proyecto
 
 ```
@@ -154,6 +182,7 @@ markitdown_gui/
 │   ├── test_ocr.py          # Tests de OCR (enrutado, 503, errores en lote, OCR real)
 │   └── test_compactor.py    # Tests de compactación (reglas lossless + endpoints)
 ├── docs/                    # Specs/planes de diseño y documentos de ejemplo (compactación, OCR)
+├── deploy/                  # Plantillas de despliegue (systemd + Nginx)
 ├── install-fedora.sh        # Instalación desde cero en Fedora
 ├── install-ubuntu.sh        # Instalación desde cero en Ubuntu/Debian
 ├── pyproject.toml           # Configuración de dependencias (uv)

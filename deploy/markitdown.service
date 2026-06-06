@@ -1,0 +1,25 @@
+# Servicio systemd para MarkItDown GUI.
+#
+# Instalación:
+#   sudo cp deploy/markitdown.service /etc/systemd/system/markitdown.service
+#   # ajusta User y las rutas si no usas /opt/markitdown_gui
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now markitdown
+#   sudo systemctl status markitdown
+#
+# IMPORTANTE: WorkingDirectory debe ser la raíz del repo, porque la app usa
+# rutas relativas (frontend/index.html, frontend/static). En producción NO se
+# usa --reload. La app escucha solo en 127.0.0.1: solo Nginx la alcanza.
+
+[Unit]
+Description=MarkItDown GUI
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/opt/markitdown_gui
+ExecStart=/opt/markitdown_gui/.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
