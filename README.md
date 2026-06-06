@@ -153,6 +153,7 @@ markitdown_gui/
 │   ├── test_anonymizer.py   # Tests de anonimización (DNI/NIE, email, endpoints)
 │   ├── test_ocr.py          # Tests de OCR (enrutado, 503, errores en lote, OCR real)
 │   └── test_compactor.py    # Tests de compactación (reglas lossless + endpoints)
+├── docs/                    # Specs/planes de diseño y documentos de ejemplo (compactación, OCR)
 ├── install-fedora.sh        # Instalación desde cero en Fedora
 ├── install-ubuntu.sh        # Instalación desde cero en Ubuntu/Debian
 ├── pyproject.toml           # Configuración de dependencias (uv)
@@ -210,7 +211,7 @@ El servidor es **stateless**: no hay carpeta de uploads, ni de outputs, ni base 
 2. FastAPI lo expone como un `UploadFile` (un `SpooledTemporaryFile` en memoria/disco que limpia Starlette al cerrar la request).
 3. El backend lo vuelca a un `tempfile.NamedTemporaryFile(delete=False, suffix=<extensión original>)` **en streaming, por trozos de 1 MB** (`_stream_to_tempfile`), sin cargar el archivo entero en memoria — típicamente en `/tmp` (Linux/Mac) o `%TEMP%` (Windows). El límite de 50 MB se aplica al vuelo: si se supera mientras se escribe, se aborta y se borra el temp.
 4. Preservar la extensión original es **load-bearing**: MarkItDown despacha el conversor por sufijo. Sin la extensión correcta, devolvería contenido vacío o erróneo.
-5. `MarkItDown.convert(tmp_path)` lee el temp file en memoria.
+5. `_extract_markdown(tmp_path, ext)` extrae el contenido: las **imágenes** pasan por **OCR (Tesseract)** y el resto por `MarkItDown.convert(tmp_path)`. Después, el texto pasa por **anonimización** (si se pidió) y **compactación** (si se pidió) antes de devolverse.
 6. Un `finally` ejecuta `os.unlink(tmp_path)`. Tras la respuesta no queda rastro del archivo en disco.
 
 ### Ciclo de vida del Markdown de salida
@@ -311,14 +312,14 @@ uv sync --force
 
 ```bash
 uv sync --all-extras
-uv run pytest
+uv run --all-extras pytest
 ```
 
 ### Formatear código
 
 ```bash
-uv run black backend/ frontend/
-uv run ruff check backend/ frontend/
+uv run black backend/ tests/
+uv run ruff check backend/ tests/
 ```
 
 ## 🤝 Contribuir
