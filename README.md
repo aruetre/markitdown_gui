@@ -241,6 +241,7 @@ Cada archivo se procesa en su propio `try/except`: un error en uno no aborta el 
 - **Memoria**: la subida se vuelca al disco **en streaming por trozos** (`_stream_to_tempfile`), así que el archivo no se mantiene entero en RAM y el límite de 50 MB se aplica al vuelo. Aun así, un proxy delante (Nginx, Caddy) sigue siendo recomendable para cortar uploads abusivos antes de llegar al worker.
 - **CORS**: no hay middleware de CORS. El frontend lo sirve la propia app en `/` y llama a `/api/*` en el mismo origen, así que no hace falta. Si algún día mueves el frontend a otro origen, añade `CORSMiddleware` con orígenes explícitos (nunca `allow_origins=["*"]`).
 - **Caché del navegador**: la app envía `Cache-Control: no-cache` en todas las respuestas, de modo que el navegador revalida (ETag) y carga el frontend nuevo en cuanto cambia, sin necesidad de `Ctrl+Shift+R`.
+- **Compresión gzip**: `GZipMiddleware` comprime las respuestas (Markdown, JSON y estáticos de texto) cuando el cliente acepta gzip, ahorrando ancho de banda de bajada. Los binarios ya comprimidos (ZIP) no ganan nada; el grueso del ahorro es el Markdown y el CSS/JS.
 
 ## ⚙️ Configuración Avanzada
 

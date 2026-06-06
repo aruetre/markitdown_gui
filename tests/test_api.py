@@ -25,6 +25,13 @@ def test_static_assets_mounted():
     assert module.status_code == 200
 
 
+def test_responses_are_gzipped():
+    r = client.get("/", headers={"Accept-Encoding": "gzip"})
+    assert r.status_code == 200
+    assert r.headers.get("content-encoding") == "gzip"
+    assert "accept-encoding" in r.headers.get("vary", "").lower()
+
+
 def test_supported_formats_endpoint():
     r = client.get("/api/supported-formats")
     assert r.status_code == 200

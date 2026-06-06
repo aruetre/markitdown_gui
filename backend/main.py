@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -21,6 +22,11 @@ MAX_FILENAME_LEN = 255
 
 # Crear aplicación FastAPI
 app = FastAPI(title="MarkItDown GUI")
+
+# Comprime las respuestas (Markdown, JSON y estáticos de texto) cuando el cliente
+# acepta gzip. El Markdown y el CSS/JS comprimen mucho; ahorra ancho de banda de
+# bajada. minimum_size evita comprimir respuestas diminutas (overhead inútil).
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
