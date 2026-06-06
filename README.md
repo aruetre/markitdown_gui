@@ -208,7 +208,7 @@ El servidor es **stateless**: no hay carpeta de uploads, ni de outputs, ni base 
 
 1. El cliente sube el archivo vía `multipart/form-data`.
 2. FastAPI lo expone como un `UploadFile` (un `SpooledTemporaryFile` en memoria/disco que limpia Starlette al cerrar la request).
-3. El backend lo vuelca a un `tempfile.NamedTemporaryFile(delete=False, suffix=<extensión original>)` — típicamente en `/tmp` (Linux/Mac) o `%TEMP%` (Windows).
+3. El backend lo vuelca a un `tempfile.NamedTemporaryFile(delete=False, suffix=<extensión original>)` **en streaming, por trozos de 1 MB** (`_stream_to_tempfile`), sin cargar el archivo entero en memoria — típicamente en `/tmp` (Linux/Mac) o `%TEMP%` (Windows). El límite de 50 MB se aplica al vuelo: si se supera mientras se escribe, se aborta y se borra el temp.
 4. Preservar la extensión original es **load-bearing**: MarkItDown despacha el conversor por sufijo. Sin la extensión correcta, devolvería contenido vacío o erróneo.
 5. `MarkItDown.convert(tmp_path)` lee el temp file en memoria.
 6. Un `finally` ejecuta `os.unlink(tmp_path)`. Tras la respuesta no queda rastro del archivo en disco.
@@ -238,7 +238,7 @@ Cada archivo se procesa en su propio `try/except`: un error en uno no aborta el 
 ### Caveats
 
 - **Crash entre los pasos 3 y 6** (p. ej. `kill -9` o panic del proceso): el temp file queda huérfano en `/tmp`. Solo el `try/finally` cubre el caso normal, no la muerte abrupta.
-- **Memoria**: el límite de 50 MB por archivo y 50 archivos por lote (ver siguiente sección) se aplica en el handler tras leer el body. El archivo se carga entero en memoria/disco antes de validarse — un proxy delante (Nginx, Caddy) sigue siendo recomendable para cortar el upload antes de llegar al worker.
+- **Memoria**: la subida se vuelca al disco **en streaming por trozos** (`_stream_to_tempfile`), así que el archivo no se mantiene entero en RAM y el límite de 50 MB se aplica al vuelo. Aun así, un proxy delante (Nginx, Caddy) sigue siendo recomendable para cortar uploads abusivos antes de llegar al worker.
 - **CORS**: no hay middleware de CORS. El frontend lo sirve la propia app en `/` y llama a `/api/*` en el mismo origen, así que no hace falta. Si algún día mueves el frontend a otro origen, añade `CORSMiddleware` con orígenes explícitos (nunca `allow_origins=["*"]`).
 - **Caché del navegador**: la app envía `Cache-Control: no-cache` en todas las respuestas, de modo que el navegador revalida (ETag) y carga el frontend nuevo en cuanto cambia, sin necesidad de `Ctrl+Shift+R`.
 

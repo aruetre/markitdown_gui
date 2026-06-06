@@ -73,6 +73,39 @@ def _check_request_size(request: Request) -> None:
         raise HTTPException(status_code=413, detail="Request body too large")
 
 
+_UPLOAD_CHUNK = 1024 * 1024  # 1 MB
+
+
+class _FileTooLarge(Exception):
+    """El upload supera MAX_FILE_SIZE (detectado al vuelo durante el streaming)."""
+
+
+async def _stream_to_tempfile(file: UploadFile, suffix: str) -> str:
+    """Vuelca el upload a un archivo temporal por trozos, sin cargarlo entero en
+    memoria, aplicando el límite de tamaño mientras se escribe.
+
+    Devuelve la ruta del temp. Lanza `_FileTooLarge` (tras limpiar el temp) si el
+    contenido supera MAX_FILE_SIZE.
+    """
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+        tmp_path = tmp_file.name
+        size = 0
+        while True:
+            chunk = await file.read(_UPLOAD_CHUNK)
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > MAX_FILE_SIZE:
+                tmp_file.close()
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+                raise _FileTooLarge()
+            tmp_file.write(chunk)
+    return tmp_path
+
+
 def _parse_entities(raw: str) -> list[str]:
     """Convierte 'email,person, dni_nie' en ['email', 'person', 'dni_nie']."""
     return [part.strip() for part in (raw or "").split(",") if part.strip()]
@@ -210,8 +243,9 @@ async def convert_files(
                 )
                 continue
 
-            content = await file.read()
-            if len(content) > MAX_FILE_SIZE:
+            try:
+                tmp_path = await _stream_to_tempfile(file, file_extension)
+            except _FileTooLarge:
                 errors.append(
                     {
                         "filename": safe_name,
@@ -219,10 +253,6 @@ async def convert_files(
                     }
                 )
                 continue
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
-                tmp_file.write(content)
-                tmp_path = tmp_file.name
 
             try:
                 raw_text = _extract_markdown(tmp_path, file_extension)
@@ -285,16 +315,13 @@ async def convert_single_file(
                 detail=f"Format not supported. Supported formats: {', '.join(SUPPORTED_EXTENSIONS.keys())}",
             )
 
-        content = await file.read()
-        if len(content) > MAX_FILE_SIZE:
+        try:
+            tmp_path = await _stream_to_tempfile(file, file_extension)
+        except _FileTooLarge:
             raise HTTPException(
                 status_code=413,
                 detail=f"File too large (max {MAX_FILE_SIZE // (1024 * 1024)} MB)",
             )
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
-            tmp_file.write(content)
-            tmp_path = tmp_file.name
 
         try:
             filename_without_ext = _safe_filename(Path(file.filename or "").stem)
