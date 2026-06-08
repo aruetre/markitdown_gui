@@ -227,3 +227,6 @@ docs/*.pdf
 
 # Brainstorm visual companion
 .superpowers/
+
+# Config local de despliegue con datos reales (no publicar)
+deploy/deploy.local.env

@@ -20,6 +20,12 @@
 #
 set -euo pipefail
 
+# Overrides locales (gitignored, NO se publica): pon ahí tu dominio/ruta reales.
+# Copia deploy.local.env.example a deploy.local.env y edítalo, o exporta las
+# variables al lanzar el script.
+_here="$(cd "$(dirname "$0")" && pwd)"
+[[ -f "$_here/deploy.local.env" ]] && source "$_here/deploy.local.env"
+
 # --- Configuración (ajústala si reutilizas el script en otro dominio) --------
 DOMAIN="${DOMAIN:-md.tudominio.es}"
 BASE_DIR="${BASE_DIR:-/var/www/vhosts/tudominio.es/md.tudominio.es}"
