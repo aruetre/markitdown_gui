@@ -44,107 +44,108 @@
     color: color-mix(in srgb, var(--token-color, var(--color-fg-muted)), #fff 18%);
 }
 
-/* Nombre de plataforma con logo en la tabla del modal */
-.token-platform {
+/* ── Carril de estimación de tokens en el modal (tarjeta por plataforma) ── */
+.trail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.trail-card {
+    padding: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+}
+
+.trail-card.over {
+    border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
+.trail-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.trail-name {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: var(--token-color, inherit);
     font-weight: 600;
+    font-size: 0.82rem;
+    /* Color de marca oscurecido para contraste sobre la superficie clara */
+    color: color-mix(in srgb, var(--token-color, var(--color-fg-muted)), #000 20%);
 }
 
-.token-platform .token-logo {
+.trail-name .token-logo {
     width: 1.05em;
     height: 1.05em;
 }
 
-/* Tabla detallada de estimación de tokens en el modal */
-.token-table-wrap {
-    margin-bottom: var(--space-4);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm), var(--glass-highlight);
-}
-
-.token-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-}
-
-.token-table th,
-.token-table td {
-    padding: var(--space-3);
-    text-align: left;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.token-table th {
+.trail-tok {
+    font-size: 0.82rem;
     font-weight: 700;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--color-fg-muted);
-    background: var(--color-surface-2);
-    border-bottom: 2px solid var(--color-border-strong);
-}
-
-.token-table tbody tr {
-    transition: background-color var(--duration-fast) var(--ease-out);
-}
-
-.token-table tbody tr:nth-child(even) {
-    background: color-mix(in srgb, var(--color-fg) 3.5%, transparent);
-}
-
-.token-table tbody tr:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-}
-
-.token-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.token-table td {
+    font-variant-numeric: tabular-nums;
     color: var(--color-fg);
 }
 
-.token-table .token-num {
-    text-align: right;
+.trail-bar {
+    height: 6px;
+    margin: var(--space-2) 0 6px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-fg) 8%, transparent);
+    overflow: hidden;
+}
+
+.trail-bar > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--token-color, var(--color-primary));
+    transition: width var(--duration-slow) var(--ease-out);
+}
+
+.trail-card.over .trail-bar > span {
+    background: var(--color-warning);
+}
+
+.trail-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: 0.72rem;
+    color: var(--color-fg-subtle);
     font-variant-numeric: tabular-nums;
 }
 
-/* Indicador "¿Cabe?" como pill */
-.token-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px var(--space-2);
-    border-radius: var(--radius-pill);
-    font-size: 0.75rem;
+.trail-fit {
     font-weight: 600;
     white-space: nowrap;
-    border: 1px solid transparent;
 }
 
-.token-pill.ok {
-    color: var(--color-success);
-    background: var(--color-success-bg);
-    border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
-}
+.trail-fit.ok { color: var(--color-success); }
+.trail-fit.over { color: var(--color-warning); }
 
-.token-pill.over {
-    color: var(--color-warning);
-    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
-    border-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
-}
-
-.token-note {
+.trail-note {
     margin-top: var(--space-2);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    line-height: 1.4;
     color: var(--color-fg-subtle);
+}
+
+/* En oscuro, aclara el nombre de marca respecto al color base */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .trail-name {
+        color: color-mix(in srgb, var(--token-color, var(--color-fg-muted)), #fff 16%);
+    }
+}
+
+[data-theme="dark"] .trail-name {
+    color: color-mix(in srgb, var(--token-color, var(--color-fg-muted)), #fff 16%);
 }
 
 /* Pieza de compresión en la fila de tokens */
@@ -154,14 +155,28 @@
     border-color: var(--color-border-strong);
 }
 
-/* Panel informativo de compresión en el modal */
+/* Panel informativo de compresión en el modal (carril lateral) */
 .compress-panel {
-    margin-bottom: var(--space-4);
     padding: var(--space-3) var(--space-4);
-    background: var(--glass-bg-soft);
-    border: 1px solid var(--glass-border);
+    background: color-mix(in srgb, var(--color-success) 9%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--color-success) 30%, var(--color-border));
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm), var(--glass-highlight);
+    box-shadow: var(--shadow-xs);
+}
+
+.compress-headline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.compress-pct {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
 }
 
 .compress-row {

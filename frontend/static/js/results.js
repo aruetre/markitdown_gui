@@ -4,7 +4,7 @@ import { requestZip } from './api.js';
 import { escapeHtml, extOf, formatElapsed, getFileIcon } from './utils.js';
 import {
     renderTokenBadges,
-    renderTokenTable,
+    renderTokenRail,
     renderCompressionBadge,
     renderCompressionPanel,
 } from './tokens.js';
@@ -101,12 +101,36 @@ export function displayResults(data) {
 function viewContent(index) {
     const result = state.conversionResults[index];
     state.currentModalData = result;
+    const text = result.markdown_content || '';
 
     document.getElementById('modalTitle').textContent = result.markdown_filename;
-    document.getElementById('modalTokens').innerHTML =
-        renderCompressionPanel(result.compacted, result.original_chars, result.markdown_content) +
-        renderTokenTable(result.markdown_content);
-    document.getElementById('modalPreview').textContent = result.markdown_content;
+
+    // Icono del archivo de origen (SVG seguro, no contenido del usuario)
+    const sourceIcon = getFileIcon(result.extension || extOf(result.original_filename));
+    document.getElementById('modalIcon').innerHTML = sourceIcon;
+
+    // Subtítulo: origen + formato + tiempo + anonimización
+    const elapsed = result.elapsed_ms != null ? ` · ${formatElapsed(result.elapsed_ms)}` : '';
+    const anon = result.anonymized ? ' · <span class="modal-sub-tag">🕵️ Anonimizado</span>' : '';
+    document.getElementById('modalSubtitle').innerHTML =
+        `De ${escapeHtml(result.original_filename)} · ${escapeHtml(result.format)}${elapsed}${anon}`;
+
+    // Estadísticas del propio Markdown
+    const nf = (n) => n.toLocaleString('es-ES');
+    const chars = text.length;
+    const words = (text.trim().match(/\S+/g) || []).length;
+    const lines = text ? text.split('\n').length : 0;
+    document.getElementById('modalStats').textContent =
+        `${nf(chars)} caracteres · ${nf(words)} palabras · ${nf(lines)} líneas`;
+
+    // Carril lateral: compactación (si la hubo) + estimación de tokens
+    document.getElementById('modalRail').innerHTML =
+        renderCompressionPanel(result.compacted, result.original_chars, text) +
+        renderTokenRail(text);
+
+    const preview = document.getElementById('modalPreview');
+    preview.textContent = text || '(Sin contenido de texto extraído)';
+    preview.classList.toggle('is-empty', !text);
 
     contentModal.showModal();
 }
@@ -214,8 +238,9 @@ export function setupResults() {
         triggerDownload(state.currentModalData);
     });
 
-    // Copiar el Markdown del modal al portapapeles
+    // Copiar el Markdown del modal al portapapeles (pie y barra del documento)
     copyBtn.addEventListener('click', () => copyModalContent());
+    document.getElementById('copyInlineBtn').addEventListener('click', () => copyModalContent());
 
     // Cerrar el <dialog> con los botones marcados (cabecera y pie)
     contentModal.querySelectorAll('[data-action="close-modal"]').forEach((el) => {

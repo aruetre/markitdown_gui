@@ -163,19 +163,35 @@
     <!-- Modal de vista previa / descarga (dialog nativo) -->
     <dialog id="contentModal" class="modal" aria-labelledby="modalTitle">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Contenido Markdown</h3>
+            <header class="modal-header">
+                <div class="modal-head">
+                    <span class="modal-icon" id="modalIcon" aria-hidden="true"></span>
+                    <div class="modal-headtext">
+                        <h3 id="modalTitle">Contenido Markdown</h3>
+                        <p class="modal-subtitle" id="modalSubtitle"></p>
+                    </div>
+                </div>
                 <button class="modal-close" type="button" data-action="close-modal" aria-label="Cerrar">&times;</button>
-            </div>
+            </header>
             <div class="modal-body">
-                <div id="modalTokens" class="token-table-wrap"></div>
-                <div id="modalPreview" class="modal-preview"></div>
+                <div class="modal-grid">
+                    <section class="modal-doc" aria-label="Markdown convertido">
+                        <div class="modal-doc-bar">
+                            <div class="doc-stats" id="modalStats"></div>
+                            <button class="doc-copy" id="copyInlineBtn" type="button" title="Copiar Markdown">
+                                <span aria-hidden="true">📋</span> Copiar
+                            </button>
+                        </div>
+                        <pre id="modalPreview" class="modal-preview" tabindex="0"></pre>
+                    </section>
+                    <aside class="modal-rail" id="modalRail" aria-label="Estadísticas del documento"></aside>
+                </div>
             </div>
-            <div class="modal-footer">
+            <footer class="modal-footer">
                 <button class="btn btn-secondary" type="button" data-action="close-modal">Cerrar</button>
                 <button id="copyBtn" class="btn btn-secondary" type="button">📋 Copiar</button>
-                <button id="downloadBtn" class="btn btn-primary">Descargar</button>
-            </div>
+                <button id="downloadBtn" class="btn btn-primary">⬇ Descargar .md</button>
+            </footer>
         </div>
     </dialog>
 

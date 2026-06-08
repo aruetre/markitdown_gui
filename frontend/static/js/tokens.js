@@ -51,6 +51,13 @@ function abbreviateTokens(n) {
     return (n / 1000000).toFixed(1).replace('.', ',') + 'M';
 }
 
+// Forma compacta y redondeada para ventanas de contexto: 128000 → "128k", 1000000 → "1M"
+function abbreviateWindow(n) {
+    if (n >= 1000000) return (n / 1000000).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + 'M';
+    if (n >= 1000) return Math.round(n / 1000) + 'k';
+    return String(n);
+}
+
 // Fila de badges (uno por plataforma) con estimación e indicador de ajuste
 export function renderTokenBadges(text, prefix = '') {
     const badges = TOKEN_PLATFORMS.map((p) => {
@@ -63,33 +70,40 @@ export function renderTokenBadges(text, prefix = '') {
     return `<div class="token-badges" aria-label="Estimación de tokens por plataforma">${prefix}${badges}</div>`;
 }
 
-// Tabla detallada de tokens por plataforma para el modal
-export function renderTokenTable(text) {
-    const rows = TOKEN_PLATFORMS.map((p) => {
+// Carril compacto de estimación de tokens para el modal: una tarjeta por
+// plataforma con barra de ocupación de su ventana de contexto.
+export function renderTokenRail(text) {
+    const cards = TOKEN_PLATFORMS.map((p) => {
         const tokens = estimateTokens(text, p.charsPerToken);
+        const ratio = p.contextWindow ? tokens / p.contextWindow : 0;
         const fits = tokens <= p.contextWindow;
+        // Relleno visible: mínimo 2% cuando hay tokens, tope 100%.
+        const fill = Math.min(100, Math.max(tokens > 0 ? 2 : 0, ratio * 100));
+        // % de la ventana solo si es ≥ 0,1%; si no, ni se muestra (cabe de sobra).
+        const pctLabel =
+            ratio >= 0.001
+                ? (ratio * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + '% de '
+                : '';
         return `
-            <tr>
-                <td><span class="token-platform" style="--token-color: ${p.color}">${platformLogo(p.key)}${escapeHtml(p.label)}</span></td>
-                <td class="token-num">≈ ${escapeHtml(formatTokenCount(tokens))}</td>
-                <td class="token-num">${escapeHtml(formatTokenCount(p.contextWindow))}</td>
-                <td><span class="token-pill ${fits ? 'ok' : 'over'}">${fits ? '✓ Cabe' : '⚠ Supera'}</span></td>
-            </tr>
+            <div class="trail-card ${fits ? '' : 'over'}" style="--token-color: ${p.color}">
+                <div class="trail-top">
+                    <span class="trail-name">${platformLogo(p.key)}${escapeHtml(p.label)}</span>
+                    <span class="trail-tok" title="≈ ${escapeHtml(formatTokenCount(tokens))} tokens">≈ ${escapeHtml(abbreviateTokens(tokens))}</span>
+                </div>
+                <div class="trail-bar"><span style="width: ${fill}%"></span></div>
+                <div class="trail-meta">
+                    <span>${pctLabel}${escapeHtml(abbreviateWindow(p.contextWindow))}</span>
+                    <span class="trail-fit ${fits ? 'ok' : 'over'}">${fits ? '✓ Cabe' : '⚠ Supera'}</span>
+                </div>
+            </div>
         `;
     }).join('');
     return `
-        <table class="token-table">
-            <thead>
-                <tr>
-                    <th>Plataforma</th>
-                    <th class="token-num">Tokens (≈)</th>
-                    <th class="token-num">Ventana</th>
-                    <th>¿Cabe?</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-        </table>
-        <p class="token-note">Estimación aproximada (heurística por caracteres). Las ventanas de contexto son típicas y pueden variar por modelo.</p>
+        <div class="rail-section">
+            <h4 class="rail-title">Estimación de tokens</h4>
+            <div class="trail" aria-label="Estimación de tokens por plataforma">${cards}</div>
+            <p class="trail-note">Aproximada (heurística por caracteres). Las ventanas son típicas y varían por modelo.</p>
+        </div>
     `;
 }
 
@@ -131,22 +145,27 @@ export function renderCompressionPanel(compacted, originalChars, text) {
     const s = compressionStats(originalChars, text);
     if (!s) {
         return `
-        <div class="compress-panel">
-            <p class="compress-note">🗜️ Compactación aplicada. El texto ya estaba compacto: no había nada que reducir (0%).</p>
+        <div class="rail-section compress-panel">
+            <h4 class="rail-title">🗜️ Compactación</h4>
+            <p class="compress-note">El texto ya estaba compacto: no había nada que reducir (0%).</p>
         </div>
     `;
     }
     return `
-        <div class="compress-panel">
+        <div class="rail-section compress-panel">
+            <div class="compress-headline">
+                <span class="compress-pct">−${s.pct}%</span>
+                <span class="rail-title" style="margin:0">🗜️ Compactado</span>
+            </div>
             <div class="compress-row">
                 <span>Caracteres</span>
-                <strong>${escapeHtml(formatTokenCount(s.originalChars))} → ${escapeHtml(formatTokenCount(s.finalChars))} (−${s.pct}%)</strong>
+                <strong>${escapeHtml(formatTokenCount(s.originalChars))} → ${escapeHtml(formatTokenCount(s.finalChars))}</strong>
             </div>
             <div class="compress-row">
-                <span>Tokens ahorrados (aprox.)</span>
+                <span>Tokens ahorrados</span>
                 <strong>≈ −${escapeHtml(formatTokenCount(s.savedTokens))}</strong>
             </div>
-            <p class="compress-note">Compactación sin pérdida: blancos, espacios y comentarios HTML.</p>
+            <p class="compress-note">Sin pérdida: blancos, espacios y comentarios HTML.</p>
         </div>
     `;
 }
