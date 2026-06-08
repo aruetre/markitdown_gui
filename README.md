@@ -145,6 +145,22 @@ sudo certbot --nginx -d md.tudominio.es
 - **La app no tiene autenticación.** Si la expones en público, protégela (p. ej. *basic auth* en Nginx; ver comentarios en el `.conf`).
 - Con anonimización activa se carga el modelo de spaCy (~570 MB) por proceso; con 1 worker uvicorn va bien.
 
+### Despliegue en IONOS con Plesk (Ubuntu)
+
+En los VPS/Servidores de IONOS con **Plesk** la ruta del (sub)dominio es del tipo `/var/www/vhosts/tudominio.es/md.tudominio.es` y **Nginx lo gestiona Plesk** (no se editan a mano los ficheros de `/etc/nginx`, los regenera). Para ese caso usa el instalador específico [deploy/install-ionos-plesk.sh](deploy/install-ionos-plesk.sh), que ejecuta como root todo lo que va por SSH:
+
+```bash
+# Como root, con el subdominio ya creado en el panel de Plesk
+cd /tmp && git clone https://github.com/aruetre/markitdown_gui.git
+sudo bash /tmp/markitdown_gui/deploy/install-ionos-plesk.sh
+# (puerto a medida:  sudo PORT=8011 bash .../install-ionos-plesk.sh)
+```
+
+El script detecta el usuario del dominio en Plesk (el servicio corre con ese usuario, **no** `www-data`), instala Tesseract/ffmpeg/`uv`, clona el repo en `…/md.tudominio.es/markitdown_gui`, hace `uv sync` y crea el servicio systemd `markitdown` en `127.0.0.1:8000`. Después, **en el panel de Plesk**:
+
+1. **Proxy inverso** — Dominios → `md.tudominio.es` → «Configuración de Apache y nginx»: **desmarca** «Modo proxy» y «Procesamiento inteligente de archivos estáticos», y pega en «Directivas adicionales de nginx» el contenido de [deploy/plesk-nginx-directives.conf](deploy/plesk-nginx-directives.conf). Desmarcar «Modo proxy» evita el error `duplicate location /`.
+2. **HTTPS** — «Certificados SSL/TLS»: instala un Let's Encrypt gratuito y marca «Redirigir de HTTP a HTTPS». En Plesk usa **su** Let's Encrypt, **no** `certbot --nginx` (rompería la gestión de certificados de Plesk).
+
 ## 📁 Estructura del Proyecto
 
 ```
@@ -182,7 +198,7 @@ markitdown_gui/
 │   ├── test_ocr.py          # Tests de OCR (enrutado, 503, errores en lote, OCR real)
 │   └── test_compactor.py    # Tests de compactación (reglas lossless + endpoints)
 ├── docs/                    # Specs/planes de diseño y documentos de ejemplo (compactación, OCR)
-├── deploy/                  # Plantillas de despliegue (systemd + Nginx)
+├── deploy/                  # Plantillas de despliegue (systemd + Nginx, e instalador IONOS/Plesk)
 ├── install-fedora.sh        # Instalación desde cero en Fedora
 ├── install-ubuntu.sh        # Instalación desde cero en Ubuntu/Debian
 ├── pyproject.toml           # Configuración de dependencias (uv)
