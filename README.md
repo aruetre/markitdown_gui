@@ -161,6 +161,32 @@ El script detecta el usuario del dominio en Plesk (el servicio corre con ese usu
 1. **Proxy inverso** — Dominios → `md.tudominio.es` → «Configuración de Apache y nginx». Pega lo que corresponda de [deploy/plesk-proxy-directives.conf](deploy/plesk-proxy-directives.conf), que trae dos variantes: **Apache** (`ProxyPass` en «Additional directives for HTTP» y «…HTTPS» — el caso habitual en IONOS, donde nginx no se expone por dominio) o **nginx** (desmarcando «Modo proxy» y pegando un `location /`). Usa la que te ofrezca el panel.
 2. **HTTPS** — «Certificados SSL/TLS»: instala un Let's Encrypt gratuito y marca «Redirigir de HTTP a HTTPS». En Plesk usa **su** Let's Encrypt, **no** `certbot --nginx` (rompería la gestión de certificados de Plesk).
 
+### Actualizar la app desplegada
+
+Primero sube los cambios desde tu máquina (`git add -A && git commit && git push`). Luego, en el servidor por SSH como root, **lo que ejecutes depende de qué hayas tocado**:
+
+| Cambiaste… | En el servidor |
+|---|---|
+| Solo **frontend** (HTML/CSS/JS) | `git pull` → recargar el navegador (Ctrl+R basta) |
+| Código **Python** de `backend/` | `git pull` → `systemctl restart markitdown` |
+| **`pyproject.toml`** (dependencias) | `git pull` → `uv sync …` → `systemctl restart markitdown` |
+
+Los ficheros estáticos se sirven directos de disco y la app manda `Cache-Control: no-cache`, así que un cambio de frontend **no necesita reiniciar el servicio ni `Ctrl+Shift+R`**: con un `git pull` y recargar la página basta.
+
+```bash
+# Comandos (como root). El git pull corre como el usuario del dominio.
+APP=/var/www/vhosts/tudominio.es/md.tudominio.es/markitdown_gui
+U=$(systemctl show -p User --value markitdown)
+sudo -u "$U" -H bash -c "cd $APP && git pull --ff-only"
+
+# Solo si cambió backend/ (Python):
+systemctl restart markitdown
+
+# Solo si cambió pyproject.toml (dependencias):
+sudo -u "$U" -H bash -c "cd $APP && UV_PYTHON_PREFERENCE=only-system /usr/local/bin/uv sync --python /usr/bin/python3"
+systemctl restart markitdown
+```
+
 ## 📁 Estructura del Proyecto
 
 ```
