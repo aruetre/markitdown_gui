@@ -158,7 +158,7 @@ sudo bash /tmp/markitdown_gui/deploy/install-ionos-plesk.sh
 
 El script detecta el usuario del dominio en Plesk (el servicio corre con ese usuario, **no** `www-data`), instala Tesseract/ffmpeg/`uv`, clona el repo en `…/md.tudominio.es/markitdown_gui`, hace `uv sync` y crea el servicio systemd `markitdown` en `127.0.0.1:8000`. Después, **en el panel de Plesk**:
 
-1. **Proxy inverso** — Dominios → `md.tudominio.es` → «Configuración de Apache y nginx»: **desmarca** «Modo proxy» y «Procesamiento inteligente de archivos estáticos», y pega en «Directivas adicionales de nginx» el contenido de [deploy/plesk-nginx-directives.conf](deploy/plesk-nginx-directives.conf). Desmarcar «Modo proxy» evita el error `duplicate location /`.
+1. **Proxy inverso** — Dominios → `md.tudominio.es` → «Configuración de Apache y nginx». Pega lo que corresponda de [deploy/plesk-proxy-directives.conf](deploy/plesk-proxy-directives.conf), que trae dos variantes: **Apache** (`ProxyPass` en «Additional directives for HTTP» y «…HTTPS» — el caso habitual en IONOS, donde nginx no se expone por dominio) o **nginx** (desmarcando «Modo proxy» y pegando un `location /`). Usa la que te ofrezca el panel.
 2. **HTTPS** — «Certificados SSL/TLS»: instala un Let's Encrypt gratuito y marca «Redirigir de HTTP a HTTPS». En Plesk usa **su** Let's Encrypt, **no** `certbot --nginx` (rompería la gestión de certificados de Plesk).
 
 ## 📁 Estructura del Proyecto

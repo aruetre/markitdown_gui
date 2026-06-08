@@ -8,7 +8,7 @@
 # La app NO es PHP: corre como un servicio systemd (uvicorn en 127.0.0.1:PORT)
 # y Plesk/Nginx hace de proxy inverso por delante. Este script automatiza TODO
 # lo que se hace por SSH como root; el proxy inverso y el certificado SSL se
-# configuran luego en el panel de Plesk (ver deploy/plesk-nginx-directives.conf
+# configuran luego en el panel de Plesk (ver deploy/plesk-proxy-directives.conf
 # y las instrucciones que imprime este script al terminar).
 #
 # Uso (como root):
@@ -136,13 +136,13 @@ Plesk los regenera):
 
 1) PROXY INVERSO
    Plesk → Dominios → $DOMAIN → "Configuración de Apache y nginx"
-     • DESMARCA  "Modo proxy" (Proxy mode)
-     • DESMARCA  "Procesamiento inteligente de archivos estáticos"
-     • En "Directivas adicionales de nginx" pega el contenido de:
-           deploy/plesk-nginx-directives.conf
-       (ya viene con el puerto $PORT; cámbialo si usaste otro)
-     • Aplicar / Aceptar
-   Comprueba que Nginx valida:   nginx -t
+   Pega las directivas de  deploy/plesk-proxy-directives.conf  (puerto $PORT).
+   Ese fichero trae 2 variantes; usa la que te ofrezca el panel:
+     • APACHE: si solo ves campos de Apache → pega el bloque ProxyPass en
+       "Additional directives for HTTP" y "...for HTTPS".
+     • NGINX:  si ves "Modo proxy" → desmárcalo (+ "Procesamiento inteligente
+       de archivos estáticos") y pega el bloque location / en las directivas
+       de nginx;  valida con:  nginx -t
 
 2) HTTPS (Let's Encrypt vía Plesk, NO uses certbot en Plesk)
    Plesk → Dominios → $DOMAIN → "Certificados SSL/TLS"
