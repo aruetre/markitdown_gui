@@ -134,7 +134,7 @@
 .modal-body {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;            /* único scroll: solo cuando el contenido excede el alto */
+    overflow: hidden;            /* el scroll vive dentro del panel del Markdown, no aquí */
     padding: var(--space-5);
 }
 
@@ -203,6 +203,9 @@
 .modal-preview {
     margin: 0;
     padding: var(--space-4);
+    max-height: 60vh;            /* el contenido largo hace scroll aquí dentro */
+    overflow-y: auto;
+    overscroll-behavior: contain;
     font-family: var(--font-mono);
     font-size: 0.83rem;
     line-height: 1.7;
@@ -252,6 +255,13 @@
     .modal-grid {
         grid-template-columns: 1fr;
         gap: var(--space-4);
+    }
+    /* Apilado: un único scroll natural del cuerpo, sin anidar el del Markdown */
+    .modal-body {
+        overflow-y: auto;
+    }
+    .modal-preview {
+        max-height: none;
     }
 }
 
