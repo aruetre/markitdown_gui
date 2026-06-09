@@ -22,7 +22,7 @@ Va más allá de la conversión: **OCR** del texto de imágenes con Tesseract, *
 ## 📦 Formatos Soportados
 
 ### Documentos
-- PDF
+- PDF — convertido con **pymupdf4llm**, que respeta el maquetado (títulos, tablas) y conserva el texto de **cabecera y pie**; si falla, recae en MarkItDown
 - Word (.docx, .doc)
 - PowerPoint (.pptx, .ppt)
 - Excel (.xlsx, .xls)
@@ -48,6 +48,8 @@ Va más allá de la conversión: **OCR** del texto de imágenes con Tesseract, *
   - **ffmpeg** — necesario para transcribir audio comprimido (mp3/m4a).
 
   > Los scripts de instalación de abajo instalan todo esto por ti. Si el binario falta, la conversión de imágenes responde `503` («OCR no disponible») en vez de fallar de forma opaca; el resto de formatos funciona igual.
+
+  > **PDF:** se convierten con `pymupdf4llm` (dependencia de Python, sin binario de sistema; la librería MuPDF va embebida y la instala `uv sync`). Ten en cuenta que **PyMuPDF/MuPDF es AGPL** (MarkItDown es MIT).
 
 ## 📥 Instalación
 
@@ -78,7 +80,8 @@ sudo dnf install tesseract tesseract-langpack-spa tesseract-langpack-eng ffmpeg-
 # Dependencias del sistema — Ubuntu/Debian
 sudo apt-get install tesseract-ocr tesseract-ocr-spa tesseract-ocr-eng ffmpeg
 
-# Dependencias de Python (incluye el modelo de spaCy es_core_news_lg, ~570 MB)
+# Dependencias de Python (incluye pymupdf4llm para PDF y el modelo de spaCy
+# es_core_news_lg, ~570 MB)
 uv sync
 # (con extras de desarrollo: pytest, black, ruff)
 uv sync --all-extras
@@ -195,6 +198,7 @@ markitdown_gui/
 │   ├── main.py              # Servidor FastAPI (endpoints + saneo + ZIP + no-cache)
 │   ├── anonymizer.py        # Anonimización de PII con Presidio (perezoso)
 │   ├── ocr.py               # OCR de imágenes con Tesseract (perezoso)
+│   ├── pdf_markdown.py      # PDF → Markdown con pymupdf4llm (perezoso; fallback a MarkItDown)
 │   └── compactor.py         # Compactación sin pérdida del Markdown
 ├── frontend/
 │   ├── index.html           # Interfaz HTML (carga módulos ESM; modal <dialog>)
@@ -222,6 +226,7 @@ markitdown_gui/
 │   ├── test_api.py          # Tests del API (pytest + httpx)
 │   ├── test_anonymizer.py   # Tests de anonimización (DNI/NIE, email, endpoints)
 │   ├── test_ocr.py          # Tests de OCR (enrutado, 503, errores en lote, OCR real)
+│   ├── test_pdf_markdown.py # Tests del enrutado PDF→pymupdf4llm y sus fallbacks
 │   └── test_compactor.py    # Tests de compactación (reglas lossless + endpoints)
 ├── docs/                    # Specs/planes de diseño y documentos de ejemplo (compactación, OCR)
 ├── deploy/                  # Plantillas de despliegue (systemd + Nginx, e instalador IONOS/Plesk)

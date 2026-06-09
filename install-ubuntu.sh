@@ -4,8 +4,8 @@
 #
 # Instala las dependencias del sistema (Tesseract para OCR de imágenes, ffmpeg
 # para transcripción de audio), el gestor de paquetes `uv` si falta, y todas las
-# dependencias de Python (markitdown[all], Presidio, spaCy + modelo
-# es_core_news_lg ~570 MB y pytesseract).
+# dependencias de Python (markitdown[all], pymupdf4llm para PDF, Presidio,
+# spaCy + modelo es_core_news_lg ~570 MB y pytesseract).
 #
 # Uso:  ./install-ubuntu.sh
 #
@@ -42,7 +42,7 @@ uv sync --all-extras
 echo "==> Verificando instalación..."
 tesseract --version | head -n 1
 ffmpeg -version | head -n 1
-uv run python -c "import markitdown, pytesseract, presidio_analyzer; print('Dependencias de Python OK')"
+uv run python -c "import markitdown, pymupdf4llm, pytesseract, presidio_analyzer; print('Dependencias de Python OK')"
 
 cat <<'EOF'
 
