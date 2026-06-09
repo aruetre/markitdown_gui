@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 import uvicorn
 from markitdown import MarkItDown
 
-from backend import compactor, ocr
+from backend import compactor, ocr, pdf_markdown
 
 # Límites para mitigar DoS por documentos grandes o lotes masivos
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB por archivo
@@ -137,11 +137,27 @@ def _extract_markdown(tmp_path: str, file_extension: str) -> str:
     """Extrae el contenido del documento como texto.
 
     Las imágenes pasan por OCR (Tesseract), ya que markitdown no reconoce el texto
-    de una imagen y devolvería contenido vacío. El resto de formatos los maneja
-    markitdown. Puede lanzar ImportError/OSError si el motor OCR no está disponible.
+    de una imagen y devolvería contenido vacío.
+
+    Los PDF se enrutan a pymupdf4llm, que produce Markdown estructurado (títulos,
+    tablas) conservando la cabecera/pie —cosas que markitdown no da: por pdfminer
+    sale texto plano, y por la vía DOCX se pierde la cabecera/pie (mammoth la
+    ignora). Si pymupdf4llm falla o no está instalado, o no extrae nada, se cae a
+    markitdown para no empeorar nunca respecto al comportamiento previo.
+
+    El resto de formatos los maneja markitdown. Puede lanzar ImportError/OSError
+    si el motor OCR no está disponible.
     """
     if ocr.is_image(file_extension):
         return ocr.ocr_image(tmp_path)
+    if file_extension.lower() == ".pdf":
+        try:
+            text = pdf_markdown.pdf_to_markdown(tmp_path)
+        except Exception:
+            text = ""
+        if text.strip():
+            return text
+        # Fallback: pymupdf4llm no disponible / falló / sin contenido.
     return md.convert(tmp_path).text_content
 
 
